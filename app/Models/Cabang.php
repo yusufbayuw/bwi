@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cabang extends Model
 {
     protected $casts = [
         'anggota_pembina' => 'json',
         'anggota_pengawas' => 'json',
+        'sekretaris' => 'json',
+        'bendahara' => 'json',
     ];
 
     use HasFactory;
@@ -43,6 +46,11 @@ class Cabang extends Model
     public function mutasis(): HasMany
     {
         return $this->hasMany(Mutasi::class);
+    }
+
+    public function latestMutasi(): HasOne
+    {
+        return $this->hasOne(Mutasi::class)->latest();
     }
 
 }

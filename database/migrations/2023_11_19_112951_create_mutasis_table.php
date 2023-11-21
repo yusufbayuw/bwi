@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('saldo_keamilan')->nullable();
             $table->string('saldo_csr')->nullable();
             $table->date('tanggal')->nullable();
-            $table->string('keterangan');
+            $table->string('keterangan')->nullable();
             $table->timestamps();
         });
     }

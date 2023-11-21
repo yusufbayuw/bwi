@@ -2,16 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CabangResource\Pages;
-use App\Filament\Resources\CabangResource\RelationManagers;
-use App\Models\Cabang;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\User;
 use Filament\Tables;
+use App\Models\Cabang;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Support\RawJs;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\CabangResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\CabangResource\RelationManagers;
 
 class CabangResource extends Resource
 {
@@ -25,28 +31,64 @@ class CabangResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $userOptions = User::all()->pluck('name', 'id');
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_cabang')
-                    ->required()
-                    ->columnSpanFull()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('lokasi')
-                    ->maxLength(255)
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('ketua_pembina')
-                    ->maxLength(255)
-                    ->columnSpanFull(),
-                Forms\Components\Repeater::make('anggota_pembina'),
-                Forms\Components\TextInput::make('ketua_pengawas')
-                    ->maxLength(255),
-                Forms\Components\Repeater::make('anggota_pengawas'),
-                Forms\Components\TextInput::make('ketua_pengurus')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('sekretaris'),
-                Forms\Components\TextInput::make('bendahara'),
-                Forms\Components\TextInput::make('saldo_awal')
-                    ->maxLength(255),
+                Section::make('CABANG')
+                    ->schema([
+                        TextInput::make('nama_cabang')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('lokasi')
+                            ->maxLength(255)
+                            ->required(),
+                        TextInput::make('saldo_awal')
+                            ->numeric()
+                            ->mask(RawJs::make(<<<'JS'
+                               $money($input, ',', '.', 2)
+                            JS))
+                            ->required(),
+                    ]),
+                Section::make('KEAMILAN')
+                    ->schema([
+                        Select::make('ketua_pembina')
+                            ->label('Ketua Pembina')
+                            ->options($userOptions)
+                            ->searchable(),
+                        Repeater::make('anggota_pembina')
+                            ->label('Anggota Pembina')
+                            ->schema([
+                                Select::make('nama')
+                                    ->options($userOptions)
+                                    ->searchable(),
+                            ]),
+                        Select::make('ketua_pengawas')
+                            ->label('Ketua Pengawas')
+                            ->options($userOptions)
+                            ->searchable(),
+                        Repeater::make('anggota_pengawas')
+                            ->schema([
+                                Select::make('nama')
+                                    ->options($userOptions)
+                                    ->searchable(),
+                            ]),
+                        Select::make('ketua_pengurus')
+                            ->label('Ketua Pengurus')
+                            ->options($userOptions)
+                            ->searchable(),
+                        Repeater::make('sekretaris')
+                            ->schema([
+                                Select::make('nama')
+                                    ->options($userOptions)
+                                    ->searchable(),
+                            ]),
+                        Repeater::make('bendahara')
+                            ->schema([
+                                Select::make('nama')
+                                    ->options($userOptions)
+                                    ->searchable(),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -54,18 +96,21 @@ class CabangResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('no')
+                    ->rowIndex(isFromZero: false),
                 Tables\Columns\TextColumn::make('nama_cabang')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('lokasi')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('ketua_pembina')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('ketua_pengawas')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('ketua_pengurus')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('saldo_awal')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

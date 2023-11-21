@@ -6,7 +6,7 @@ use App\Models\Cabang;
 use App\Models\Mutasi;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
-class CabangObserver implements ShouldHandleEventsAfterCommit
+class CabangObserver //implements ShouldHandleEventsAfterCommit
 {
     /**
      * Handle the Cabang "created" event.
@@ -17,7 +17,8 @@ class CabangObserver implements ShouldHandleEventsAfterCommit
             $mutasi = Mutasi::create([
                 'cabang_id' => $cabang->id,
                 'debet' => $cabang->saldo_awal,
-                'saldo_umum' => $cabang->saldo_awal
+                'saldo_umum' => $cabang->saldo_awal,
+                'keterangan' => "Dana awal Cabang"
             ]);
         }
     }
@@ -29,20 +30,23 @@ class CabangObserver implements ShouldHandleEventsAfterCommit
     {
         if ($cabang->saldo_awal) {
             $cabang_id = $cabang->id;
-            $mutasi_old = (int)(Mutasi::where('cabang_id', $cabang_id)->latest()->first()->saldo_umum) - (int)($cabang->saldo_awal);
+            $dana_awal = $cabang->getOriginal('saldo_awal');
+            $mutasi_old = (int)(Mutasi::where('cabang_id', $cabang_id)->latest()->first()->saldo_umum ?? 0) - (int)($dana_awal);
 
             // Create first entry
             $mutasi1 = Mutasi::create([
                 'cabang_id' => $cabang_id,
-                'kredit' => $cabang->saldo_awal,
-                'saldo_umum' => $mutasi_old
+                'kredit' => $dana_awal,
+                'saldo_umum' => $mutasi_old,
+                'keterangan' => "Perubahan dana awal lama Cabang",
             ]);
 
             // Create second entry
             $mutasi2 = Mutasi::create([
                 'cabang_id' => $cabang_id,
-                'kredit' => $cabang->saldo_awal,
-                'saldo_umum' => $mutasi_old + (int)($cabang->saldo_awal)
+                'debet' => $cabang->saldo_awal,
+                'saldo_umum' => $mutasi_old + (int)($cabang->saldo_awal),
+                'keterangan' => "Perubahan dana awal baru Cabang",
             ]);
         }
     }

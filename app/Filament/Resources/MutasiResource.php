@@ -27,14 +27,14 @@ class MutasiResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('cabang_id')
+                /* Forms\Components\Select::make('cabang_id')
                     ->relationship('cabangs', 'nama_cabang'),
                 Forms\Components\TextInput::make('pinjaman_id')
-                    ->numeric(),
+                    ->relationship('pinjamans', 'nama_cabang'),
                 Forms\Components\TextInput::make('cicilan_id')
-                    ->numeric(),
+                    ->relationship('cabangs', 'nama_cabang'),
                 Forms\Components\TextInput::make('pengeluaran_id')
-                    ->numeric(),
+                    ->relationship('cabangs', 'nama_cabang'),
                 Forms\Components\TextInput::make('infak_id')
                     ->numeric(),
                 Forms\Components\TextInput::make('debet')
@@ -47,7 +47,7 @@ class MutasiResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('saldo_csr')
                     ->maxLength(255),
-                Forms\Components\DatePicker::make('tanggal'),
+                Forms\Components\DatePicker::make('tanggal'), */
             ]);
     }
 
@@ -55,12 +55,17 @@ class MutasiResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('no')
+                    ->rowIndex(isFromZero: false),
                 Tables\Columns\TextColumn::make('cabangs.nama_cabang')
+                    ->label('Nama Cabang')
                     ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault:false),
+                /* Tables\Columns\TextColumn::make('pinjaman_id')
+                    ->sortable()
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault:true),
-                Tables\Columns\TextColumn::make('pinjaman_id')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('cicilan_id')
                     ->numeric()
                     ->sortable(),
@@ -69,17 +74,47 @@ class MutasiResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('infak_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable(), */
+                Tables\Columns\TextColumn::make('tanggal')
+                    ->sortable()
+                    ->date(),
+                Tables\Columns\TextColumn::make('keterangan')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('debet')
-                    ->searchable(),
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('kredit')
-                    ->searchable(),
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('saldo_umum')
-                    ->searchable(),
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('saldo_keamilan')
-                    ->searchable(),
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('saldo_csr')
-                    ->searchable(),
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 Tables\Columns\TextColumn::make('tanggal')
                     ->date()
                     ->sortable(),
@@ -96,16 +131,16 @@ class MutasiResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                //Tables\Actions\ViewAction::make(),
+                //Tables\Actions\EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
+            //->bulkActions([
+            //    Tables\Actions\BulkActionGroup::make([
+            //        Tables\Actions\DeleteBulkAction::make(),
+            //    ]),
+            //])
             ->emptyStateActions([
-                Tables\Actions\CreateAction::make(),
+                //Tables\Actions\CreateAction::make(),
             ]);
     }
     
@@ -120,9 +155,9 @@ class MutasiResource extends Resource
     {
         return [
             'index' => Pages\ListMutasis::route('/'),
-            'create' => Pages\CreateMutasi::route('/create'),
+            //'create' => Pages\CreateMutasi::route('/create'),
             'view' => Pages\ViewMutasi::route('/{record}'),
-            'edit' => Pages\EditMutasi::route('/{record}/edit'),
+            //'edit' => Pages\EditMutasi::route('/{record}/edit'),
         ];
     }    
 }
