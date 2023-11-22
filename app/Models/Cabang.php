@@ -47,10 +47,4 @@ class Cabang extends Model
     {
         return $this->hasMany(Mutasi::class);
     }
-
-    public function latestMutasi(): HasOne
-    {
-        return $this->hasOne(Mutasi::class)->latest();
-    }
-
 }

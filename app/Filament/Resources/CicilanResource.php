@@ -2,16 +2,24 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CicilanResource\Pages;
-use App\Filament\Resources\CicilanResource\RelationManagers;
-use App\Models\Cicilan;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Cicilan;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Support\RawJs;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\CicilanResource\RelationManagers;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 
 class CicilanResource extends Resource
 {
@@ -27,22 +35,38 @@ class CicilanResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+        
         return $form
             ->schema([
-                Forms\Components\TextInput::make('pinjaman_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('nominal_cicilan')
-                    ->maxLength(255),
-                Forms\Components\DatePicker::make('tanggal_cicilan'),
-                Forms\Components\TextInput::make('tagihan_ke')
-                    ->maxLength(255),
-                Forms\Components\Toggle::make('is_final')
-                    ->required(),
-                Forms\Components\TextInput::make('berkas')
-                    ->maxLength(255),
-                Forms\Components\Toggle::make('status_cicilan')
-                    ->required(),
-                Forms\Components\DatePicker::make('tanggal_bayar'),
+                Select::make('cabang_id')
+                    ->relationship('cabangs', 'nama_cabang')
+                    ->disabled()
+                    ->hidden(!($userAuthAdminAccess)),
+                Select::make('pinjaman_id')
+                    ->relationship('pinjamans', 'nama_kelompok')
+                    ->disabled(),
+                TextInput::make('nominal_cicilan')
+                    ->mask(RawJs::make(<<<'JS'
+                            $money($input, ',', '.', 2)
+                        JS))
+                    ->disabled(),
+                DatePicker::make('tanggal_cicilan')
+                    ->disabled(),
+                TextInput::make('tagihan_ke')
+                    ->mask(RawJs::make(<<<'JS'
+                                $money($input, ',', '.', 0)
+                            JS))
+                    ->disabled(),
+                Toggle::make('is_final')
+                    ->disabled()
+                    ->hidden(),
+                Toggle::make('status_cicilan'),
+                DatePicker::make('tanggal_bayar')
+                    ->maxDate(now()),
+                FileUpload::make('berkas'),
             ]);
     }
 
@@ -50,30 +74,46 @@ class CicilanResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('pinjaman_id')
-                    ->numeric()
+                TextColumn::make('no')
+                    ->rowIndex(isFromZero: false),
+                TextColumn::make('cabangs.nama_cabang')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('nominal_cicilan')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('tanggal_cicilan')
+                TextColumn::make('pinjamans.nama_kelompok')
+                    ->sortable(),
+                TextColumn::make('tanggal_cicilan')
+                    ->label('Tanggal Tagihan')
+                    ->date()
+                    ->sortable(),    
+                TextColumn::make('nominal_cicilan')
+                    ->searchable()
+                    ->label('Nominal')
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
+                TextColumn::make('tagihan_ke')
+                    ->searchable()
+                    ->numeric(
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
+                IconColumn::make('is_final')
+                    ->boolean()
+                    ->hidden(),
+                IconColumn::make('status_cicilan')
+                    ->boolean(),
+                TextColumn::make('tanggal_bayar')
+                    ->label('Tanggal Pembayaran')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('tagihan_ke')
+                TextColumn::make('berkas')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_final')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('berkas')
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('status_cicilan')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('tanggal_bayar')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -83,12 +123,12 @@ class CicilanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                //Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                //Tables\Actions\BulkActionGroup::make([
+                    //Tables\Actions\DeleteBulkAction::make(),
+                //]),
             ]);
     }
 
@@ -103,7 +143,7 @@ class CicilanResource extends Resource
     {
         return [
             'index' => Pages\ListCicilans::route('/'),
-            'create' => Pages\CreateCicilan::route('/create'),
+            //'create' => Pages\CreateCicilan::route('/create'),
             'view' => Pages\ViewCicilan::route('/{record}'),
             'edit' => Pages\EditCicilan::route('/{record}/edit'),
         ];

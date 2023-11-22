@@ -2,16 +2,29 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
-use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\User;
 use Filament\Tables;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Support\RawJs;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\CheckboxList;
+use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Support\Enums\Alignment;
 
 class UserResource extends Resource
 {
@@ -27,102 +40,163 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
         return $form
             ->schema([
-                Forms\Components\Select::make('cabang_id')
-                    ->relationship('cabangs', 'nama_cabang'),
-                Forms\Components\TextInput::make('pinjaman_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('username')
-                    ->maxLength(255),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
-                Forms\Components\TextInput::make('password')
-                    ->password()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('no_hp')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('nomor_ktp')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('nomor_kk')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('file_ktp')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('file_kk')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('alamat')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('pekerjaan')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('penghasilan_bulanan')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('bmpa')
-                    ->required()
-                    ->maxLength(255)
-                    ->default(500000),
-                Forms\Components\Toggle::make('is_kelompok')
-                    ->required(),
-                Forms\Components\Toggle::make('is_can_login')
-                    ->required(),
-                Forms\Components\CheckboxList::make('roles')
-                    ->relationship('roles', 'name')
-                    ->searchable(),
+                Section::make('Data Diri')
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('no_hp')
+                            ->label('Nomor HP')
+                            ->mask('9999 9999 9999 9999'),
+                        TextInput::make('email')
+                            ->email()
+                            ->maxLength(255),
+                        TextInput::make('nomor_ktp')
+                            ->label('Nomor KTP')
+                            ->maxLength(16)
+                            ->mask('9999 9999 9999 9999'),
+                        FileUpload::make('file_ktp')
+                            ->label('Berkas KTP'),
+                        TextInput::make('nomor_kk')
+                            ->label('Nomor KK')
+                            ->maxLength(16)
+                            ->mask('9999 9999 9999 9999'),
+                        FileUpload::make('file_kk')
+                            ->label('Berkas KK'),
+                        Textarea::make('alamat')
+                            ->maxLength(255),
+                    ]),
+                Section::make('Data Penghasilan')
+                    ->schema([
+                        TextInput::make('pekerjaan')
+                            ->maxLength(255),
+                        TextInput::make('penghasilan_bulanan')
+                            ->maxLength(255),
+                    ]),
+                Section::make('Kelompok Pinjaman')
+                    ->schema([
+                        Toggle::make('is_kelompok')
+                            ->live(debounce: 500)
+                            ->disabled()
+                            ->label('Tergabung Kelompok Peminjam'),
+                        Select::make('pinjaman_id')
+                            ->label('Kelompok Pinjaman')
+                            ->relationship('pinjamans', 'nama_kelompok')
+                            ->disabled(fn (Get $get) => !($get('is_kelompok'))),
+                        TextInput::make('bmpa')
+                            ->mask(RawJs::make(<<<'JS'
+                               $money($input, ',', '.', 2)
+                            JS))
+                            ->disabled()
+                            ->default(500000),
+                    ]),
+                Section::make()
+                    ->schema([
+                        TextInput::make('username')
+                            ->maxLength(255)
+                            ->hidden(!($userAuthAdminAccess)),
+                        Select::make('cabang_id')
+                            ->relationship('cabangs', 'nama_cabang')
+                            ->disabledOn(($userAuthAdminAccess) ? '' : ['create', 'edit'])
+                            ->hidden(!($userAuthAdminAccess)),
+                        TextInput::make('password')
+                            ->password()
+                            ->required(!($userAuthAdminAccess))
+                            ->hidden(!($userAuthAdminAccess))
+                            ->maxLength(255),
+                        Toggle::make('is_can_login')
+                            ->hidden(!($userAuthAdminAccess)),
+                        CheckboxList::make('roles')
+                            ->relationship('roles', 'name')
+                            ->searchable()
+                            ->hidden(!($userAuthAdminAccess)),
+                    ])
+                    ->hidden(!($userAuthAdminAccess)),
+
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('cabang_id')
+               TextColumn::make('no')
+                    ->rowIndex(isFromZero: false),
+                TextColumn::make('cabangs.nama_cabang')
+                    ->numeric()
+                    ->sortable()
+                    ->hidden(!($userAuthAdminAccess)),
+                TextColumn::make('pinjamans.nama_kelompok')
+                    ->label('Kelompok')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pinjaman_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
+                    ->label('Nama')
+                    ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email')
+                TextColumn::make('bmpa')
+                    ->label('BMPA')
+                    ->alignment(Alignment::End)
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
+                TextColumn::make('email')
+                    ->searchable()
+                    ->hidden(!($userAuthAdminAccess)),
+                TextColumn::make('username')
+                    ->searchable()
+                    ->hidden(!($userAuthAdminAccess)),
+                TextColumn::make('no_hp')
+                    ->label('Nomor HP')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('username')
+                TextColumn::make('nomor_ktp')
+                    ->label('Nomor KTP')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('no_hp')
+                ImageColumn::make('file_ktp')
+                    ->label('Berkas KTP'),
+                TextColumn::make('nomor_kk')
+                    ->label('Nomor KK')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nomor_ktp')
+                ImageColumn::make('file_kk')
+                    ->label('Berkas KK'),
+                TextColumn::make('alamat')
+                    ->searchable()
+                    ->limit(20),
+                TextColumn::make('pekerjaan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nomor_kk')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('file_ktp')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('file_kk')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('alamat')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('pekerjaan')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('penghasilan_bulanan')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('bmpa')
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('is_kelompok')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('is_can_login')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('penghasilan_bulanan')
+                    ->label('Penghasilan')
+                    ->searchable()
+                    ->sortable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
+                IconColumn::make('is_kelompok')
+                    ->boolean()
+                    ->hidden(!($userAuthAdminAccess)),
+                IconColumn::make('is_can_login')
+                    ->boolean()
+                    ->hidden(!($userAuthAdminAccess)),
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -143,14 +217,14 @@ class UserResource extends Resource
                 Tables\Actions\CreateAction::make(),
             ]);
     }
-    
+
     public static function getRelations(): array
     {
         return [
             //
         ];
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -159,5 +233,5 @@ class UserResource extends Resource
             'view' => Pages\ViewUser::route('/{record}'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
-    }    
+    }
 }

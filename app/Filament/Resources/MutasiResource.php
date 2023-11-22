@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\MutasiResource\Pages;
-use App\Filament\Resources\MutasiResource\RelationManagers;
-use App\Models\Mutasi;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Mutasi;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\MutasiResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\MutasiResource\RelationManagers;
 
 class MutasiResource extends Resource
 {
@@ -55,74 +56,74 @@ class MutasiResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('no')
+                TextColumn::make('no')
                     ->rowIndex(isFromZero: false),
-                Tables\Columns\TextColumn::make('cabangs.nama_cabang')
+                TextColumn::make('cabangs.nama_cabang')
                     ->label('Nama Cabang')
                     ->sortable()
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault:false),
-                /* Tables\Columns\TextColumn::make('pinjaman_id')
+                /* TextColumn::make('pinjaman_id')
                     ->sortable()
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault:true),
-                Tables\Columns\TextColumn::make('cicilan_id')
+                TextColumn::make('cicilan_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pengeluaran_id')
+                TextColumn::make('pengeluaran_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('infak_id')
+                TextColumn::make('infak_id')
                     ->numeric()
                     ->sortable(), */
-                Tables\Columns\TextColumn::make('tanggal')
+                TextColumn::make('tanggal')
                     ->sortable()
                     ->date(),
-                Tables\Columns\TextColumn::make('keterangan')
+                TextColumn::make('keterangan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('debet')
+                TextColumn::make('debet')
                     ->searchable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                Tables\Columns\TextColumn::make('kredit')
+                TextColumn::make('kredit')
                     ->searchable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                Tables\Columns\TextColumn::make('saldo_umum')
+                TextColumn::make('saldo_umum')
                     ->searchable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                Tables\Columns\TextColumn::make('saldo_keamilan')
+                TextColumn::make('saldo_keamilan')
                     ->searchable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                Tables\Columns\TextColumn::make('saldo_csr')
+                TextColumn::make('saldo_csr')
                     ->searchable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                Tables\Columns\TextColumn::make('tanggal')
+                TextColumn::make('tanggal')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

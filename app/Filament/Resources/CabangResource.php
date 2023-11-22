@@ -43,7 +43,6 @@ class CabangResource extends Resource
                             ->maxLength(255)
                             ->required(),
                         TextInput::make('saldo_awal')
-                            ->numeric()
                             ->mask(RawJs::make(<<<'JS'
                                $money($input, ',', '.', 2)
                             JS))

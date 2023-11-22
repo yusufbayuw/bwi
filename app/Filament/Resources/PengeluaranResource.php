@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PengeluaranResource\Pages;
-use App\Filament\Resources\PengeluaranResource\RelationManagers;
-use App\Models\Pengeluaran;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\Pengeluaran;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PengeluaranResource\Pages;
+use App\Filament\Resources\PengeluaranResource\RelationManagers;
 
 class PengeluaranResource extends Resource
 {
@@ -44,22 +45,24 @@ class PengeluaranResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('cabang_id')
+                TextColumn::make('no')
+                    ->rowIndex(isFromZero: false),
+                TextColumn::make('cabang_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('jenis')
+                TextColumn::make('jenis')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('tanggal')
+                TextColumn::make('tanggal')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nominal')
+                TextColumn::make('nominal')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('berkas')
+                TextColumn::make('berkas')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
