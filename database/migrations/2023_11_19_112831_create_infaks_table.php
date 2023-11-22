@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cabang_id')->nullable()->constrained('cabangs')->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
-            $table->string('jenis_anggota')->nullable();
             $table->string('nominal')->nullable();
             $table->date('tanggal')->nullable();
             $table->timestamps();

@@ -18,9 +18,7 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "noxoua/filament-activity-log": "^2.1",
-        "pxlrbt/filament-excel": "^2.1",
-        "pxlrbt/filament-spotlight": "^1.0"
+        "pxlrbt/filament-excel": "^2.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

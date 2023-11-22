@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateInfak extends CreateRecord
 {
     protected static string $resource = InfakResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

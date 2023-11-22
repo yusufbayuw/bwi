@@ -8,6 +8,8 @@ use App\Models\Pinjaman;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,12 +27,28 @@ class PinjamanResource extends Resource
 
     protected static ?string $slug = 'pinjaman';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
         return $form
             ->schema([
-                Forms\Components\TextInput::make('cabang_id')
-                    ->numeric(),
+                ($userAuthAdminAccess) ? Select::make('cabang_id')
+                    ->label('Cabang')
+                    ->relationship('cabangs', 'nama_cabang') : 
+                    Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Forms\Components\TextInput::make('nama_kelompok')
                     ->required()
                     ->maxLength(255),

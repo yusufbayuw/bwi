@@ -19,6 +19,7 @@ use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CicilanResource\RelationManagers;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 
 class CicilanResource extends Resource
@@ -33,18 +34,28 @@ class CicilanResource extends Resource
 
     protected static ?string $slug = 'cicilan';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $adminAccess = ['super_admin', 'admin_pusat'];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
         
         return $form
             ->schema([
-                Select::make('cabang_id')
-                    ->relationship('cabangs', 'nama_cabang')
-                    ->disabled()
-                    ->hidden(!($userAuthAdminAccess)),
+                ($userAuthAdminAccess) ? Select::make('cabang_id')
+                    ->label('Cabang')
+                    ->relationship('cabangs', 'nama_cabang') : 
+                    Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('pinjaman_id')
                     ->relationship('pinjamans', 'nama_kelompok')
                     ->disabled(),
@@ -60,9 +71,8 @@ class CicilanResource extends Resource
                                 $money($input, ',', '.', 0)
                             JS))
                     ->disabled(),
-                Toggle::make('is_final')
-                    ->disabled()
-                    ->hidden(),
+                Hidden::make('is_final')
+                    ->disabled(),
                 Toggle::make('status_cicilan'),
                 DatePicker::make('tanggal_bayar')
                     ->maxDate(now()),
@@ -98,9 +108,6 @@ class CicilanResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                IconColumn::make('is_final')
-                    ->boolean()
-                    ->hidden(),
                 IconColumn::make('status_cicilan')
                     ->boolean(),
                 TextColumn::make('tanggal_bayar')
@@ -122,8 +129,8 @@ class CicilanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                //Tables\Actions\EditAction::make(),
+                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 //Tables\Actions\BulkActionGroup::make([

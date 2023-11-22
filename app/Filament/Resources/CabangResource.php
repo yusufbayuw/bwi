@@ -29,6 +29,16 @@ class CabangResource extends Resource
 
     protected static ?string $slug = 'cabang';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
         $userOptions = User::all()->pluck('name', 'id');

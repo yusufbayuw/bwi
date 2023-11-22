@@ -7,12 +7,18 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\Pengeluaran;
+use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PengeluaranResource\Pages;
 use App\Filament\Resources\PengeluaranResource\RelationManagers;
+use Filament\Forms\Components\FileUpload;
 
 class PengeluaranResource extends Resource
 {
@@ -24,20 +30,44 @@ class PengeluaranResource extends Resource
 
     protected static ?string $slug = 'pengeluaran';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
         return $form
             ->schema([
-                Forms\Components\TextInput::make('cabang_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('jenis')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('tanggal')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('nominal')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('berkas')
-                    ->maxLength(255),
+                ($userAuthAdminAccess) ? Select::make('cabang_id')
+                    ->label('Cabang')
+                    ->relationship('cabangs', 'nama_cabang') : 
+                    Hidden::make('cabang_id')->default($userAuth->cabang_id),
+                Select::make('jenis')
+                    ->options([
+                        'Keamilan' => 'Keamilan',
+                        'CSR' => 'CSR',
+                        'Umum' => 'Umum'
+                    ])->required(),
+                DatePicker::make('tanggal')
+                    ->maxDate(now())
+                    ->required()
+                    ->required(),
+                TextInput::make('nominal')
+                    ->mask(RawJs::make(<<<'JS'
+                    $money($input, ',', '.', 2)
+                JS))
+                    ->required(),
+                FileUpload::make('berkas'),
             ]);
     }
 

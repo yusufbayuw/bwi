@@ -3,16 +3,22 @@
 namespace App\Filament\Resources;
 
 use Filament\Forms;
+use App\Models\User;
 use Filament\Tables;
 use App\Models\Infak;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
+use Filament\Forms\Components\Hidden;
 
 class InfakResource extends Resource
 {
@@ -24,19 +30,37 @@ class InfakResource extends Resource
 
     protected static ?string $slug = 'infaq';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
+        $userAuth = auth()->user();
+        $adminAccess = ['super_admin', 'admin_pusat'];
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+        $userRecord = User::all();
+
         return $form
             ->schema([
-                Forms\Components\TextInput::make('cabang_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('user_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('jenis_anggota')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('nominal')
-                    ->maxLength(255),
-                Forms\Components\DatePicker::make('tanggal'),
+                ($userAuthAdminAccess) ? Select::make('cabang_id')
+                    ->label('Cabang')
+                    ->relationship('cabangs', 'nama_cabang') : 
+                    Hidden::make('cabang_id')->default($userAuth->cabang_id),
+                Select::make('user_id')
+                    ->label('Anggota')
+                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name','id') : $userRecord->where('id', $userAuth->cabang_id)->pluck('name','id')),
+                TextInput::make('nominal')
+                    ->mask(RawJs::make(<<<'JS'
+                            $money($input, ',', '.', 2)
+                        JS)),
+                DatePicker::make('tanggal')->maxDate(now()),
             ]);
     }
 
@@ -89,14 +113,14 @@ class InfakResource extends Resource
                 Tables\Actions\CreateAction::make(),
             ]);
     }
-    
+
     public static function getRelations(): array
     {
         return [
             //
         ];
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -105,5 +129,5 @@ class InfakResource extends Resource
             'view' => Pages\ViewInfak::route('/{record}'),
             'edit' => Pages\EditInfak::route('/{record}/edit'),
         ];
-    }    
+    }
 }

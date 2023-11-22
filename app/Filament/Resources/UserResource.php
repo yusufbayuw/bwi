@@ -10,8 +10,11 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Hash;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Support\Enums\Alignment;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
@@ -24,7 +27,6 @@ use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
-use Filament\Support\Enums\Alignment;
 
 class UserResource extends Resource
 {
@@ -38,10 +40,20 @@ class UserResource extends Resource
 
     protected static ?string $slug = 'anggota';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $adminAccess = ['super_admin', 'admin_pusat'];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $form
@@ -101,15 +113,17 @@ class UserResource extends Resource
                         TextInput::make('username')
                             ->maxLength(255)
                             ->hidden(!($userAuthAdminAccess)),
-                        Select::make('cabang_id')
-                            ->relationship('cabangs', 'nama_cabang')
-                            ->disabledOn(($userAuthAdminAccess) ? '' : ['create', 'edit'])
-                            ->hidden(!($userAuthAdminAccess)),
+                        ($userAuthAdminAccess) ? Select::make('cabang_id')
+                            ->label('Cabang')
+                            ->relationship('cabangs', 'nama_cabang') : 
+                            Hidden::make('cabang_id')->default($userAuth->cabang_id),
                         TextInput::make('password')
                             ->password()
                             ->required(!($userAuthAdminAccess))
                             ->hidden(!($userAuthAdminAccess))
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->dehydrateStateUsing(static fn (null|string $state): null|string => filled($state) ? Hash::make($state) : null,)
+                            ->dehydrated(static fn (null|string $state): bool => filled($state)),
                         Toggle::make('is_can_login')
                             ->hidden(!($userAuthAdminAccess)),
                         CheckboxList::make('roles')
@@ -125,7 +139,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat', 'admin_cabang'];
+        $adminAccess = ['super_admin', 'admin_pusat'];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $table

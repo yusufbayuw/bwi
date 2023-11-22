@@ -72,7 +72,6 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 BreezyCore::make(),
                 FilamentShieldPlugin::make(),
-                SpotlightPlugin::make(),
             ]);
     }
 }
