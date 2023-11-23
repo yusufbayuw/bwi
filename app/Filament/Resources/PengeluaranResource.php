@@ -66,7 +66,9 @@ class PengeluaranResource extends Resource
                     ->mask(RawJs::make(<<<'JS'
                     $money($input, ',', '.', 2)
                 JS))
-                    ->required(),
+                    ->required()
+                    ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                    ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 FileUpload::make('berkas'),
             ]);
     }

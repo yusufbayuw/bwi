@@ -63,14 +63,18 @@ class CicilanResource extends Resource
                     ->mask(RawJs::make(<<<'JS'
                             $money($input, ',', '.', 2)
                         JS))
-                    ->disabled(),
+                    ->disabled()
+                    ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                    ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 DatePicker::make('tanggal_cicilan')
                     ->disabled(),
                 TextInput::make('tagihan_ke')
                     ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 0)
                             JS))
-                    ->disabled(),
+                    ->disabled()
+                    ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                    ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 Hidden::make('is_final')
                     ->disabled(),
                 Toggle::make('status_cicilan'),

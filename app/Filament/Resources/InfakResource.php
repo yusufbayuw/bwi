@@ -51,15 +51,17 @@ class InfakResource extends Resource
             ->schema([
                 ($userAuthAdminAccess) ? Select::make('cabang_id')
                     ->label('Cabang')
-                    ->relationship('cabangs', 'nama_cabang') : 
+                    ->relationship('cabangs', 'nama_cabang') :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('user_id')
                     ->label('Anggota')
-                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name','id') : $userRecord->where('id', $userAuth->cabang_id)->pluck('name','id')),
+                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name', 'id') : $userRecord->where('id', $userAuth->cabang_id)->pluck('name', 'id')),
                 TextInput::make('nominal')
                     ->mask(RawJs::make(<<<'JS'
                             $money($input, ',', '.', 2)
-                        JS)),
+                        JS))
+                    ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                    ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 DatePicker::make('tanggal')->maxDate(now()),
             ]);
     }

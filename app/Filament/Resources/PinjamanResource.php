@@ -12,13 +12,16 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +29,6 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
-use Filament\Tables\Columns\ImageColumn;
 
 class PinjamanResource extends Resource
 {
@@ -56,58 +58,88 @@ class PinjamanResource extends Resource
 
         return $form
             ->schema([
-                ($userAuthAdminAccess) ? Select::make('cabang_id')
-                    ->label('Cabang')
-                    ->relationship('cabangs', 'nama_cabang')
-                    ->live() : 
-                    Hidden::make('cabang_id')->default($userAuth->cabang_id),
-                TextInput::make('nama_kelompok')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('jumlah_anggota')
-                    ->options([]),
-                Repeater::make('list_anggota')
-                    ->schema([
-                        Select::make('nama')
-                            ->label('Nama Anggota')
-                            ->options(function (Get $get) {
-                                $userAuth = auth()->user();
-                                $adminAccess = ['super_admin', 'admin_pusat'];
-                                $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-                                if ($userAuthAdminAccess) {
-                                    return User::where('cabang_id', ($get('dummy')))->pluck('name', 'id');
-                                } else {
-                                    return User::where('cabang_id', ($userAuth->cabang_id ?? 0))->pluck('name', 'id');
-                                } 
-                            } )
-                            ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', User::where('id', $state)->first()->bmpa))
-                            ->live(),
-                        TextInput::make('bmpa')
-                            ->disabled(),
-                        Hidden::make('dummy')
-                            ->default(fn (Get $get) => ($get('../../cabang_id') ?? 0))
-                    ])->live(),
-                TextInput::make('berkas')
-                    ->maxLength(255),
-                TextInput::make('nominal_bmpa_max')
-                    ->mask(RawJs::make(<<<'JS'
+                Wizard::make([
+                    Wizard\Step::make('Kelompok')
+                        ->schema([
+                            ($userAuthAdminAccess) ? Select::make('cabang_id')
+                                ->label('Cabang')
+                                ->relationship('cabangs', 'nama_cabang')
+                                ->live(debounce: 500) :
+                                Hidden::make('cabang_id')->default($userAuth->cabang_id),
+                            TextInput::make('nama_kelompok')
+                                ->required()
+                                ->maxLength(255),
+                            Stepper::make('jumlah_anggota')
+                                ->minValue(5)
+                                ->maxValue(11)
+                                ->step(2)
+                                ->default(5)
+                                ->live(debounce: 500),
+                        ]),
+                    Wizard\Step::make('Anggota')
+                        ->schema([
+                            Repeater::make('list_anggota')
+                                ->schema([
+                                    Select::make('nama')
+                                        ->label('Nama Anggota')
+                                        ->options(function (Get $get) {
+                                            $userAuth = auth()->user();
+                                            $adminAccess = ['super_admin', 'admin_pusat'];
+                                            $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+                                            if ($userAuthAdminAccess) {
+                                                return User::where('cabang_id', ($get('../../cabang_id')))->pluck('name', 'id');
+                                            } else {
+                                                return User::where('cabang_id', ($userAuth->cabang_id ?? 0))->pluck('name', 'id');
+                                            }
+                                        })
+                                        ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', User::where('id', $state)->first()->bmpa))
+                                        ->live(debounce: 500),
+                                    TextInput::make('bmpa')
+                                        ->mask(RawJs::make(<<<'JS'
+                                $money($input, ',', '.', 0)
+                            JS))
+                                        ->disabled(),
+                                ])
+                                ->live(debounce: 500)
+                                ->maxItems(fn (Get $get) => $get('jumlah_anggota'))
+                                ->minItems(fn (Get $get) => $get('jumlah_anggota'))
+                                ->afterStateUpdated(function (Set $set, $state) {
+                                    $totalBmpa = 0;
+                                    foreach ($state as $key => $item) {
+                                        if ($totalBmpa < (float)$item['bmpa']) {
+                                            $totalBmpa = (float)$item['bmpa'];
+                                            $set('nominal_bmpa_max', $totalBmpa);
+                                        }
+                                    };
+                                })->label('Daftar Anggota'),
+                        ]),
+                    Wizard\Step::make('Cicilan')
+                        ->schema([
+                            TextInput::make('nominal_bmpa_max')
+                                ->mask(RawJs::make(<<<'JS'
                         $money($input, ',', '.', 2)
                     JS))
-                    //->content(fn (Get $get) => min($get('list_anggota')))
-                    ->disabled(),
-                Stepper::make('lama_cicilan')
-                    ->label('Lama Cicilan (minggu)')
-                    ->minValue(5)
-                    ->maxValue(50)
-                    ->step(5)
-                    ->default(5),
-                TextInput::make('status')
-                    ->maxLength(255),
-                TextInput::make('total_pinjaman')
-                    ->maxLength(255),
-                Toggle::make('acc_pinjaman')
-                    ->required(),
-                DatePicker::make('tanggal_cicilan_pertama'),
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                ->disabled(),
+                            Stepper::make('lama_cicilan')
+                                ->label('Lama Cicilan (minggu)')
+                                ->minValue(5)
+                                ->maxValue(50)
+                                ->step(5)
+                                ->default(5)
+                                ->live(debounce:500)
+                                ->afterStateUpdated(fn (Set $set, Get $get, $state) => $set('total_pinjaman', (float)$get('nominal_bmpa_max')*(float)$state)),
+                            TextInput::make('status'),
+                            TextInput::make('total_pinjaman')->disabled(),
+                            Toggle::make('acc_pinjaman'),
+                            DatePicker::make('tanggal_cicilan_pertama')->format('dd/mm/yyyy'),
+                            FileUpload::make('berkas'),
+                        ])
+                ])->submitAction(new HtmlString('<button type="submit">Simpan</button>')),
+
+
+
             ]);
     }
 

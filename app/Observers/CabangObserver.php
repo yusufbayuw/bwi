@@ -31,7 +31,7 @@ class CabangObserver //implements ShouldHandleEventsAfterCommit
         if ($cabang->saldo_awal) {
             $cabang_id = $cabang->id;
             $dana_awal = $cabang->getOriginal('saldo_awal');
-            $mutasi_old = (int)(Mutasi::where('cabang_id', $cabang_id)->latest()->first()->saldo_umum ?? 0) - (int)($dana_awal);
+            $mutasi_old = (float)(Mutasi::where('cabang_id', $cabang_id)->latest()->first()->saldo_umum ?? 0) - (float)($dana_awal);
 
             // Create first entry
             $mutasi1 = Mutasi::create([
@@ -45,7 +45,7 @@ class CabangObserver //implements ShouldHandleEventsAfterCommit
             $mutasi2 = Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'debet' => $cabang->saldo_awal,
-                'saldo_umum' => $mutasi_old + (int)($cabang->saldo_awal),
+                'saldo_umum' => $mutasi_old + (float)($cabang->saldo_awal),
                 'keterangan' => "Perubahan dana awal baru Cabang",
             ]);
         }
