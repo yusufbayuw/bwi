@@ -3,7 +3,15 @@
 namespace App\Providers;
 
 use App\Models\Cabang;
+use App\Models\Cicilan;
+use App\Models\Infak;
+use App\Models\Pengeluaran;
+use App\Models\User;
 use App\Observers\CabangObserver;
+use App\Observers\CicilanObserver;
+use App\Observers\InfakObserver;
+use App\Observers\PengeluaranObserver;
+use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -28,6 +36,10 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Cabang::observe(CabangObserver::class);
+        Cicilan::observe(CicilanObserver::class);
+        Infak::observe(InfakObserver::class);
+        Pengeluaran::observe(PengeluaranObserver::class);
+        User::observe(UserObserver::class);
     }
 
     /**

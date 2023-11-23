@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Pinjaman extends Model
 {
+    protected $casts = [
+        'list_anggota' => 'json',
+    ];
+    
     use HasFactory;
 
     protected $table = 'pinjamans';

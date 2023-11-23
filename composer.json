@@ -13,6 +13,7 @@
         "filament/filament": "^3.0-stable",
         "flowframe/laravel-trend": "^0.1.5",
         "guzzlehttp/guzzle": "^7.2",
+        "icetalker/filament-stepper": "^1.1",
         "jeffgreco13/filament-breezy": "^2.1",
         "joshembling/image-optimizer": "^1.2",
         "laravel/framework": "^10.10",

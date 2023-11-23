@@ -58,7 +58,7 @@ class UserResource extends Resource
 
         return $form
             ->schema([
-                Section::make('Data Diri')
+                Section::make('DATA DIRI')
                     ->schema([
                         TextInput::make('name')
                             ->required()
@@ -84,12 +84,15 @@ class UserResource extends Resource
                         Textarea::make('alamat')
                             ->maxLength(255),
                     ]),
-                Section::make('Data Penghasilan')
+                Section::make('DATA PENGHASILAN')
                     ->schema([
                         TextInput::make('pekerjaan')
                             ->maxLength(255),
                         TextInput::make('penghasilan_bulanan')
-                            ->maxLength(255),
+                            ->label('Penghasilan Bulanan')
+                            ->mask(RawJs::make(<<<'JS'
+                                $money($input, ',', '.', 2)
+                            JS)),
                     ]),
                 Section::make('Kelompok Pinjaman')
                     ->schema([
@@ -108,7 +111,7 @@ class UserResource extends Resource
                             ->disabled()
                             ->default(500000),
                     ]),
-                Section::make()
+                Section::make('ADMIN SETTING')
                     ->schema([
                         TextInput::make('username')
                             ->maxLength(255)

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('username')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
-            $table->string('jenis_pengguna');
+            $table->string('jenis_pengguna')->nullable();
             $table->rememberToken();
             $table->string('no_hp')->nullable();
             $table->string('nomor_ktp')->nullable();
