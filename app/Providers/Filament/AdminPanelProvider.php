@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('bwi')
             ->path('bwi')
             ->login()
+            ->darkMode(false)
             ->brandName('BWI-ITB')
             ->brandLogo(asset('images/brand.png'))
             ->brandLogoHeight('3rem')
