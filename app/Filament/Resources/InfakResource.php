@@ -55,7 +55,7 @@ class InfakResource extends Resource
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('user_id')
                     ->label('Anggota')
-                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name', 'id') : $userRecord->where('id', $userAuth->cabang_id)->pluck('name', 'id')),
+                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name', 'id') : $userRecord->where('cabang_id', $userAuth->cabang_id)->pluck('name', 'id')),
                 TextInput::make('nominal')
                     ->mask(RawJs::make(<<<'JS'
                             $money($input, ',', '.', 2)

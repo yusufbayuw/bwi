@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('mutasis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cabang_id')->nullable()->constrained('cabangs')->nullOnDelete();
-            $table->foreignId('pinjaman_id')->nullable()->constrained('pinjamans')->nullOnDelete();
-            $table->foreignId('cicilan_id')->nullable()->constrained('cicilans')->nullOnDelete();
-            $table->foreignId('pengeluaran_id')->nullable()->constrained('pengeluarans')->nullOnDelete();
-            $table->foreignId('infak_id')->nullable()->constrained('infaks')->nullOnDelete();
+            $table->foreignId('cabang_id')->nullable()->constrained('cabangs')->cascadeOnDelete();
+            $table->foreignId('pinjaman_id')->nullable()->constrained('pinjamans')->cascadeOnDelete();
+            $table->foreignId('cicilan_id')->nullable()->constrained('cicilans')->cascadeOnDelete();
+            $table->foreignId('pengeluaran_id')->nullable()->constrained('pengeluarans')->cascadeOnDelete();
+            $table->foreignId('infak_id')->nullable()->constrained('infaks')->cascadeOnDelete();
             $table->string('debet')->nullable();
             $table->string('kredit')->nullable();
             $table->string('saldo_umum')->nullable();

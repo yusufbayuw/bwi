@@ -72,6 +72,7 @@ class MutasiResource extends Resource
                     ->label('Nama Cabang')
                     ->sortable()
                     ->searchable()
+                    ->hidden(!(auth()->user()->hasRole(['super_admin','admin'])))
                     ->toggleable(isToggledHiddenByDefault:false),
                 /* TextColumn::make('pinjaman_id')
                     ->sortable()

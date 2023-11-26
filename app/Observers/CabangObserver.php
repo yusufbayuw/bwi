@@ -18,7 +18,7 @@ class CabangObserver //implements ShouldHandleEventsAfterCommit
                 'cabang_id' => $cabang->id,
                 'debet' => $cabang->saldo_awal,
                 'saldo_umum' => $cabang->saldo_awal,
-                'keterangan' => "Dana awal Cabang"
+                'keterangan' => "Dana awal cabang"
             ]);
         }
     }
@@ -28,27 +28,43 @@ class CabangObserver //implements ShouldHandleEventsAfterCommit
      */
     public function updated(Cabang $cabang): void
     {
-        if ($cabang->saldo_awal) {
-            $cabang_id = $cabang->id;
+        if ($cabang->saldo_awal && ($cabang->saldo_awal != $cabang->getOriginal('saldo_awal'))) {
+            $cabang_id = $cabang->getOriginal('id');
             $dana_awal = $cabang->getOriginal('saldo_awal');
-            $mutasi_old = (float)(Mutasi::where('cabang_id', $cabang_id)->latest()->first()->saldo_umum ?? 0) - (float)($dana_awal);
-
-            // Create first entry
-            $mutasi1 = Mutasi::create([
-                'cabang_id' => $cabang_id,
-                'kredit' => $dana_awal,
-                'saldo_umum' => $mutasi_old,
-                'keterangan' => "Perubahan dana awal lama Cabang",
-            ]);
-
-            // Create second entry
-            $mutasi2 = Mutasi::create([
-                'cabang_id' => $cabang_id,
-                'debet' => $cabang->saldo_awal,
-                'saldo_umum' => $mutasi_old + (float)($cabang->saldo_awal),
-                'keterangan' => "Perubahan dana awal baru Cabang",
-            ]);
+            $last_mutasi = Mutasi::where('cabang_id', $cabang_id)->orderBy('id', 'DESC')->first();
+        
+            if ($last_mutasi) {
+                $mutasi_old = (float)($last_mutasi->saldo_umum ?? 0) - (float)($dana_awal);
+                $mutasi_old_keamilan = (float)($last_mutasi->saldo_keamilan ?? 0);
+                $mutasi_old_csr = (float)($last_mutasi->saldo_csr ?? 0);
+        
+                // Create first entry
+                $mutasi1 = Mutasi::create([
+                    'cabang_id' => $cabang_id,
+                    'debet' => $dana_awal,
+                    'saldo_umum' => $mutasi_old,
+                    'saldo_keamilan' => $mutasi_old_keamilan,
+                    'saldo_csr' => $mutasi_old_csr,
+                    'keterangan' => "Perubahan dana awal cabang (lama)",
+                ]);
+        
+                // Create second entry
+                $mutasi2 = Mutasi::create([
+                    'cabang_id' => $cabang_id,
+                    'kredit' => $cabang->saldo_awal,
+                    'saldo_umum' => $mutasi_old + (float)($cabang->saldo_awal),
+                    'saldo_keamilan' => $mutasi_old_keamilan,
+                    'saldo_csr' => $mutasi_old_csr,
+                    'keterangan' => "Perubahan dana awal cabang (baru)",
+                ]);
+        
+                // Additional logic can be added here based on your requirements
+            } else {
+                // Handle the case when $last_mutasi is null
+                // You may want to log an error or handle this situation appropriately
+            }
         }
+        
     }
 
     /**

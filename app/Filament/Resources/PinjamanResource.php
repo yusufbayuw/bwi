@@ -13,10 +13,12 @@ use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Log;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
+use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -29,6 +31,7 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
+use Filament\Forms\Components\Component;
 
 class PinjamanResource extends Resource
 {
@@ -54,7 +57,14 @@ class PinjamanResource extends Resource
     {
         $userAuth = auth()->user();
         $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminBendaharaAccess = ['super_admin', 'admin_pusat', 'bendahara_cabang'];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
+        if ($userAuthAdminAccess) {
+            $userOption = null;
+        } else {
+            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false);
+        }
 
         return $form
             ->schema([
@@ -64,82 +74,256 @@ class PinjamanResource extends Resource
                             ($userAuthAdminAccess) ? Select::make('cabang_id')
                                 ->label('Cabang')
                                 ->relationship('cabangs', 'nama_cabang')
-                                ->live(debounce: 500) :
+                                ->live() :
                                 Hidden::make('cabang_id')->default($userAuth->cabang_id),
                             TextInput::make('nama_kelompok')
                                 ->required()
                                 ->maxLength(255),
-                            Stepper::make('jumlah_anggota')
-                                ->minValue(5)
-                                ->maxValue(11)
-                                ->step(2)
-                                ->default(5)
-                                ->live(debounce: 500),
+                            Select::make('jumlah_anggota')
+                                ->options([
+                                    '5' => '5 anggota',
+                                    '7' => '7 anggota',
+                                    '9' => '9 anggota',
+                                    '11' => '11 anggota',
+                                ])
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(
+                                    fn (Select $component) => $component->getContainer()->getParentComponent()->getContainer()->getComponent('dynamicTypeFields')->getChildComponentContainer()->fill()
+                                ),
                         ]),
                     Wizard\Step::make('Anggota')
-                        ->schema([
-                            Repeater::make('list_anggota')
-                                ->schema([
-                                    Select::make('nama')
-                                        ->label('Nama Anggota')
-                                        ->options(function (Get $get) {
-                                            $userAuth = auth()->user();
-                                            $adminAccess = ['super_admin', 'admin_pusat'];
-                                            $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-                                            if ($userAuthAdminAccess) {
-                                                return User::where('cabang_id', ($get('../../cabang_id')))->pluck('name', 'id');
-                                            } else {
-                                                return User::where('cabang_id', ($userAuth->cabang_id ?? 0))->pluck('name', 'id');
-                                            }
+                        ->schema(
+                            fn (Get $get): array => match ($get('jumlah_anggota')) {
+                                '5' => [
+                                    Repeater::make('list_anggota')
+                                        ->schema([
+                                            Select::make('nama')
+                                                ->label('Nama Anggota')
+                                                ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
+                                                    if ($userAuthAdminAccess) {
+                                                        return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->pluck('name', 'id');
+                                                    } else {
+                                                        return $userOption->pluck('name', 'id');
+                                                    }
+                                                })
+                                                ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
+                                                ->live()
+                                                ->required(),
+                                            TextInput::make('bmpa')
+                                                ->label('BMPA')
+                                                ->mask(RawJs::make(<<<'JS'
+                                                $money($input, ',', '.', 0)
+                                            JS))
+                                                ->disabled()
+                                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        ])
+                                        ->live(debounce: 500)
+                                        ->maxItems(5)
+                                        ->minItems(5)
+                                        ->afterStateUpdated(function (Set $set, $state) {
+                                            $totalBmpa = 9999999999;
+                                            foreach ($state as $key => $item) {
+                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                    $totalBmpa = (float)$bmpa;
+                                                }
+                                            };
+                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
                                         })
-                                        ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', User::where('id', $state)->first()->bmpa))
-                                        ->live(debounce: 500),
-                                    TextInput::make('bmpa')
-                                        ->mask(RawJs::make(<<<'JS'
-                                $money($input, ',', '.', 0)
-                            JS))
-                                        ->disabled(),
-                                ])
-                                ->live(debounce: 500)
-                                ->maxItems(fn (Get $get) => $get('jumlah_anggota'))
-                                ->minItems(fn (Get $get) => $get('jumlah_anggota'))
-                                ->afterStateUpdated(function (Set $set, $state) {
-                                    $totalBmpa = 0;
-                                    foreach ($state as $key => $item) {
-                                        if ($totalBmpa < (float)$item['bmpa']) {
-                                            $totalBmpa = (float)$item['bmpa'];
-                                            $set('nominal_bmpa_max', $totalBmpa);
-                                        }
-                                    };
-                                })->label('Daftar Anggota'),
-                        ]),
+                                        ->label('Daftar Anggota')
+                                        ->reorderableWithDragAndDrop(false)
+                                        ->deletable(false)
+                                        ->columns(2)
+                                        ->defaultItems(5),
+                                ],
+                                '7' => [
+                                    Repeater::make('list_anggota')
+                                        ->schema([
+                                            Select::make('nama')
+                                                ->label('Nama Anggota')
+                                                ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
+                                                    if ($userAuthAdminAccess) {
+                                                        return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->pluck('name', 'id');
+                                                    } else {
+                                                        return $userOption->pluck('name', 'id');
+                                                    }
+                                                })
+                                                ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
+                                                ->live()
+                                                ->required(),
+                                            TextInput::make('bmpa')
+                                                ->label('BMPA')
+                                                ->mask(RawJs::make(<<<'JS'
+                                                    $money($input, ',', '.', 0)
+                                                JS))
+                                                ->disabled()
+                                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        ])
+                                        ->live(debounce: 500)
+                                        ->maxItems(7)
+                                        ->minItems(7)
+                                        ->afterStateUpdated(function (Set $set, $state) {
+                                            $totalBmpa = 9999999999;
+                                            foreach ($state as $key => $item) {
+                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                    $totalBmpa = (float)$bmpa;
+                                                }
+                                            };
+                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                        })
+                                        ->label('Daftar Anggota')
+                                        ->reorderableWithDragAndDrop(false)
+                                        ->deletable(false)
+                                        ->columns(2)
+                                        ->defaultItems(7),
+                                ],
+                                '9' => [
+                                    Repeater::make('list_anggota')
+                                        ->schema([
+                                            Select::make('nama')
+                                                ->label('Nama Anggota')
+                                                ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
+                                                    if ($userAuthAdminAccess) {
+                                                        return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->pluck('name', 'id');
+                                                    } else {
+                                                        return $userOption->pluck('name', 'id');
+                                                    }
+                                                })
+                                                ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
+                                                ->live()
+                                                ->required(),
+                                            TextInput::make('bmpa')
+                                                ->label('BMPA')
+                                                ->mask(RawJs::make(<<<'JS'
+                                                        $money($input, ',', '.', 0)
+                                                    JS))
+                                                ->disabled()
+                                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        ])
+                                        ->live(debounce: 500)
+                                        ->maxItems(9)
+                                        ->minItems(9)
+                                        ->afterStateUpdated(function (Set $set, $state) {
+                                            $totalBmpa = 9999999999;
+                                            foreach ($state as $key => $item) {
+                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                    $totalBmpa = (float)$bmpa;
+                                                }
+                                            };
+                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                        })
+                                        ->label('Daftar Anggota')
+                                        ->reorderableWithDragAndDrop(false)
+                                        ->deletable(false)
+                                        ->columns(2)
+                                        ->defaultItems(9),
+                                ],
+                                '11' => [
+                                    Repeater::make('list_anggota')
+                                        ->schema([
+                                            Select::make('nama')
+                                                ->label('Nama Anggota')
+                                                ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
+                                                    if ($userAuthAdminAccess) {
+                                                        return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->pluck('name', 'id');
+                                                    } else {
+                                                        return $userOption->pluck('name', 'id');
+                                                    }
+                                                })
+                                                ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
+                                                ->live()
+                                                ->required(),
+                                            TextInput::make('bmpa')
+                                                ->label('BMPA')
+                                                ->mask(RawJs::make(<<<'JS'
+                                                            $money($input, ',', '.', 0)
+                                                        JS))
+                                                ->disabled()
+                                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        ])
+                                        ->live(debounce: 500)
+                                        ->maxItems(11)
+                                        ->minItems(11)
+                                        ->afterStateUpdated(function (Set $set, $state) {
+                                            $totalBmpa = 9999999999;
+                                            foreach ($state as $key => $item) {
+                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                    $totalBmpa = (float)$bmpa;
+                                                }
+                                            };
+                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                        })
+                                        ->label('Daftar Anggota')
+                                        ->reorderableWithDragAndDrop(false)
+                                        ->deletable(false)
+                                        ->columns(2)
+                                        ->defaultItems(11),
+                                ],
+                                default => [],
+                            }
+                        )->key('dynamicTypeFields'),
                     Wizard\Step::make('Cicilan')
                         ->schema([
                             TextInput::make('nominal_bmpa_max')
+                                ->label('Maksimum Pinjaman Per Anggota')
                                 ->mask(RawJs::make(<<<'JS'
                         $money($input, ',', '.', 2)
                     JS))
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                                ->disabled(),
+                                ->disabled()
+                                ->live(),
                             Stepper::make('lama_cicilan')
                                 ->label('Lama Cicilan (minggu)')
                                 ->minValue(5)
                                 ->maxValue(50)
                                 ->step(5)
-                                ->default(5)
-                                ->live(debounce:500)
-                                ->afterStateUpdated(fn (Set $set, Get $get, $state) => $set('total_pinjaman', (float)$get('nominal_bmpa_max')*(float)$state)),
-                            TextInput::make('status'),
-                            TextInput::make('total_pinjaman')->disabled(),
-                            Toggle::make('acc_pinjaman'),
-                            DatePicker::make('tanggal_cicilan_pertama')->format('dd/mm/yyyy'),
+                                ->default(0)
+                                ->live(debounce: 500)
+                                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                    $number_total = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $get('nominal_bmpa_max')))) * (float)$state;
+                                    $set('total_pinjaman', number_format($number_total, 2, ',', '.'));
+                                }),
+                            Select::make('status')
+                                ->options([
+                                    'Pembuatan Kelompok' => 'Pembuatan Kelompok',
+                                    'Menunggu Verifikasi' => 'Menunggu Verifikasi',
+                                    'Cicilan Berjalan' => 'Cicilan Berjalan',
+                                    'Sudah Lunas' => 'Sudah Lunas',
+                                ])
+                                ->default('Pembuatan Kelompok')
+                                ->disabled(),
+                            TextInput::make('total_pinjaman')
+                                ->mask(RawJs::make(<<<'JS'
+                                $money($input, ',', '.', 2)
+                            JS))
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                ->disabled(),
+                            Toggle::make('acc_pinjaman')
+                                ->hidden(!($userAuth->hasRole($adminBendaharaAccess))),
+                            DatePicker::make('tanggal_cicilan_pertama')
+                                ->format('dd/mm/yyyy')
+                                ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
+                                ->required(!($userAuth->hasRole($adminBendaharaAccess))),
                             FileUpload::make('berkas'),
                         ])
-                ])->submitAction(new HtmlString('<button type="submit">Simpan</button>')),
-
-
-
+                ])->submitAction(new HtmlString(Blade::render(<<<BLADE
+                <x-filament::button
+                    type="submit"
+                    size="sm"
+                >
+                    Simpan
+                </x-filament::button>
+            BLADE)))
+                    ->columnSpanFull(),
             ]);
     }
 
