@@ -10,9 +10,11 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Navigation\NavigationItem;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CabangResource\Pages;
@@ -28,6 +30,20 @@ class CabangResource extends Resource
     protected static ?string $navigationGroup = 'Administrator';
 
     protected static ?string $slug = 'cabang';
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            NavigationItem::make(static::getNavigationLabel())
+                ->group(static::getNavigationGroup())
+                ->icon(static::getNavigationIcon())
+                ->activeIcon(static::getActiveNavigationIcon())
+                ->isActiveWhen(fn () => request()->routeIs(static::getRouteBaseName() . '.*'))
+                ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
+                ->sort(static::getNavigationSort())
+                ->url((!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? static::getNavigationUrl() : static::getNavigationUrl()."/".Auth::user()->cabang_id),
+        ];
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -158,9 +174,9 @@ class CabangResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCabangs::route('/'),
+            'index' => (!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? Pages\ListCabangs::route('/') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
             'create' => Pages\CreateCabang::route('/create'),
-            'view' => Pages\ViewCabang::route('/{record}'),
+            'view' => (!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? Pages\ViewCabang::route('/{record}') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
             'edit' => Pages\EditCabang::route('/{record}/edit'),
         ];
     }    

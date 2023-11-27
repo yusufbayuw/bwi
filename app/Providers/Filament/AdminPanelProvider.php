@@ -53,7 +53,6 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
-                //Widgets\FilamentInfoWidget::class,
             ])
             ->breadcrumbs(false)
             ->middleware([
@@ -73,6 +72,6 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 BreezyCore::make(),
                 FilamentShieldPlugin::make(),
-            ]);
+            ])->collapsedSidebarWidth(0);
     }
 }
