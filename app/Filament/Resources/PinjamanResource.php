@@ -35,6 +35,8 @@ use Filament\Forms\Components\Component;
 
 class PinjamanResource extends Resource
 {
+    public Pinjaman $pinjaman;
+
     protected static ?string $model = Pinjaman::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
@@ -42,6 +44,14 @@ class PinjamanResource extends Resource
     protected static ?string $navigationGroup = 'Kelompok';
 
     protected static ?string $slug = 'pinjaman';
+
+    public function mutateFormDataBeforeFill(array $data): array
+    {
+        // STORE TEAMS
+        $data['users'] = $this->pinjaman->users()->get()->toArray();
+
+        return $data;
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -70,6 +80,7 @@ class PinjamanResource extends Resource
             ->schema([
                 Wizard::make([
                     Wizard\Step::make('Kelompok')
+                        ->description('buat kelompok pinjaman')
                         ->schema([
                             ($userAuthAdminAccess) ? Select::make('cabang_id')
                                 ->label('Cabang')
@@ -86,18 +97,19 @@ class PinjamanResource extends Resource
                                     '9' => '9 anggota',
                                     '11' => '11 anggota',
                                 ])
-                                ->live(onBlur: true)
+                                ->live()
                                 ->afterStateUpdated(
                                     fn (Select $component) => $component->getContainer()->getParentComponent()->getContainer()->getComponent('dynamicTypeFields')->getChildComponentContainer()->fill()
                                 ),
                         ]),
                     Wizard\Step::make('Anggota')
+                        ->description('daftarkan anggota kelompok')
                         ->schema(
                             fn (Get $get): array => match ($get('jumlah_anggota')) {
                                 '5' => [
                                     Repeater::make('list_anggota')
                                         ->schema([
-                                            Select::make('name')
+                                            Select::make('user_id')
                                                 ->label('Nama Anggota')
                                                 ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
                                                     if ($userAuthAdminAccess) {
@@ -107,9 +119,8 @@ class PinjamanResource extends Resource
                                                     }
                                                 })
                                                 ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
-                                                ->live()
                                                 ->required()
-                                                ->distinct(),
+                                                ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                                             TextInput::make('bmpa')
                                                 ->label('BMPA')
                                                 ->mask(RawJs::make(<<<'JS'
@@ -122,7 +133,7 @@ class PinjamanResource extends Resource
                                         ->live(debounce: 500)
                                         ->maxItems(5)
                                         ->minItems(5)
-                                        ->afterStateUpdated(function (Set $set, $state) {
+                                        ->afterStateUpdated(function (Set $set, $state, Get $get) {
                                             $totalBmpa = 9999999999;
                                             foreach ($state as $key => $item) {
                                                 $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
@@ -132,6 +143,8 @@ class PinjamanResource extends Resource
                                             };
                                             $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
                                             $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                            $set('cicilan_kelompok', number_format($totalBmpa / 5, 2, ",", "."));
+                                            $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
                                         })
                                         ->label('Daftar Anggota')
                                         ->reorderableWithDragAndDrop(false)
@@ -176,6 +189,8 @@ class PinjamanResource extends Resource
                                             };
                                             $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
                                             $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                            $set('cicilan_kelompok', number_format($totalBmpa / 5, 2, ",", "."));
+                                            $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
                                         })
                                         ->label('Daftar Anggota')
                                         ->reorderableWithDragAndDrop(false)
@@ -220,6 +235,8 @@ class PinjamanResource extends Resource
                                             };
                                             $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
                                             $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                            $set('cicilan_kelompok', number_format($totalBmpa / 5, 2, ",", "."));
+                                            $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
                                         })
                                         ->label('Daftar Anggota')
                                         ->reorderableWithDragAndDrop(false)
@@ -264,6 +281,8 @@ class PinjamanResource extends Resource
                                             };
                                             $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
                                             $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                            $set('cicilan_kelompok', number_format($totalBmpa / 5, 2, ",", "."));
+                                            $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
                                         })
                                         ->label('Daftar Anggota')
                                         ->reorderableWithDragAndDrop(false)
@@ -275,33 +294,57 @@ class PinjamanResource extends Resource
                             }
                         )->key('dynamicTypeFields'),
                     Wizard\Step::make('Cicilan')
+                        ->description('atur cicilan per minggu')
                         ->schema([
-                            Hidden::make('nominal_bmpa_max')
-                                ->label('Maksimum Pinjaman Per Anggota')
-                                //->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
-                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                                ->disabled()
-                                ->live(debounce: 500),
-                            TextInput::make('nominal_pinjaman')
-                                ->label('Nominal Pinjaman per Anggota')
-                                ->numeric()
+                            TextInput::make('nominal_bmpa_max')
                                 ->mask(RawJs::make(<<<'JS'
                                     $money($input, ',', '.', 2)
                                 JS))
+                                ->label('Maksimum Pinjaman Per Anggota')
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                                ->live(debounce: 500),
+                                ->disabled(),
+                            TextInput::make('nominal_pinjaman')
+                                ->label('Nominal Pinjaman per Anggota')
+                                ->mask(RawJs::make(<<<'JS'
+                                    $money($input, ',', '.', 2)
+                                JS))
+                                //->hint("Nominal pinjaman per anggota tidak boleh melebihi maksimum pinjaman per anggota")
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                ->live(debounce: 2000)
+                                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                    $number_total = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))) / (float)$get('lama_cicilan');
+                                    $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
+                                    $set('total_pinjaman', number_format((float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))) * (float)$get('jumlah_anggota'), 2, ',', '.'));
+                                }),
                             Stepper::make('lama_cicilan')
                                 ->label('Lama Cicilan (minggu)')
                                 ->minValue(5)
                                 ->maxValue(50)
                                 ->step(5)
                                 ->default(5)
-                                ->live(debounce: 500)
+                                ->live(debounce: 1000)
                                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                                    $number_total = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $get('nominal_pinjaman')))) * (float)$state;
-                                    $set('total_pinjaman', number_format($number_total, 2, ',', '.'));
+                                    $number_total = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $get('nominal_pinjaman')))) / (float)$state;
+                                    $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
                                 }),
+                            TextInput::make('total_pinjaman')
+                                ->mask(RawJs::make(<<<'JS'
+                                $money($input, ',', '.', 2)
+                            JS))
+                                ->label("Total Pinjaman Kelompok")
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                ->disabled(),
+                            TextInput::make('cicilan_kelompok')
+                                ->mask(RawJs::make(<<<'JS'
+                                    $money($input, ',', '.', 2)
+                                JS))
+                                ->label('Cicilan Kelompok per Minggu')
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                ->disabled(),
                             Select::make('status')
                                 ->options([
                                     'Pembuatan Kelompok' => 'Pembuatan Kelompok',
@@ -310,13 +353,6 @@ class PinjamanResource extends Resource
                                     'Sudah Lunas' => 'Sudah Lunas',
                                 ])
                                 ->default('Pembuatan Kelompok')
-                                ->disabled(),
-                            TextInput::make('total_pinjaman')
-                                ->mask(RawJs::make(<<<'JS'
-                                $money($input, ',', '.', 2)
-                            JS))
-                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
-                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
                                 ->disabled(),
                             Toggle::make('acc_pinjaman')
                                 ->hidden(!($userAuth->hasRole($adminBendaharaAccess))),
@@ -335,7 +371,9 @@ class PinjamanResource extends Resource
                 </x-filament::button>
             BLADE)))
                     ->columnSpanFull(),
-            ]);
+            ])
+            ->statePath('data')
+            ->model($this->pinjaman);
     }
 
     public static function table(Table $table): Table

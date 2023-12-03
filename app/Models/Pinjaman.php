@@ -28,6 +28,11 @@ class Pinjaman extends Model
         $this->hasMany(User::class, 'user_id', 'id');
     }
 
+    public function list_anggota(): HasMany
+    {
+        $this->hasMany(User::class, 'user_id', 'id');
+    }
+
     public function cabangs(): BelongsTo
     {
         return $this->belongsTo(Cabang::class, 'cabang_id', 'id');
