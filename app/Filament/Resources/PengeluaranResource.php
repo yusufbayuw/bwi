@@ -61,7 +61,7 @@ class PengeluaranResource extends Resource
                     ->options([
                         'Keamilan' => 'Pengeluaran Keamilan',
                         'CSR' => 'Pengeluaran CSR',
-                        'Umum' => 'Pengeluaran Umum'
+                        //'Umum' => 'Pengeluaran Umum'
                     ])
                     ->required()
                     ->disabled(fn (Get $get) => $get('cabang_id') ? false : true)
