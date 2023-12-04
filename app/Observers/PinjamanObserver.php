@@ -47,7 +47,7 @@ class PinjamanObserver
 
             $lamaCicilan = (int)$pinjaman->lama_cicilan;
             $userIds = $pinjaman->list_anggota;
-
+            
             foreach ($userIds as $userIdData) {
                 $userId = $userIdData['user_id'];
                 $user = User::find($userId);
@@ -73,10 +73,9 @@ class PinjamanObserver
                         'tagihan_ke' => $i,	
                         'is_final' => ($i === $lamaCicilan) ? true : false,	
                     ]);
+                    $tglCicilan = date('Y-m-d', strtotime($tglCicilan.' +1 week'));
                 }
             }
-
-
         }
     }
 

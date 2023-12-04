@@ -13,16 +13,16 @@ class Cicilan extends Model
 
     public function pinjamans(): BelongsTo
     {
-        return $this->belongsTo(Pinjaman::class);
+        return $this->belongsTo(Pinjaman::class, 'pinjaman_id', 'id');
     }
 
     public function mutasis(): HasOne
     {
-        return $this->hasOne(Mutasi::class);
+        return $this->hasOne(Mutasi::class, 'mutasi_id', 'id');
     }
 
     public function cabangs(): BelongsTo
     {
-        return $this->belongsTo(Cabang::class);
+        return $this->belongsTo(Cabang::class, 'cabang_id', 'id');
     }
 }

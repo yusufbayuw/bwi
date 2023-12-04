@@ -78,8 +78,7 @@ class CicilanResource extends Resource
                 Hidden::make('is_final')
                     ->disabled(),
                 Toggle::make('status_cicilan'),
-                DatePicker::make('tanggal_bayar')
-                    ->maxDate(now()),
+                DatePicker::make('tanggal_bayar'),
                 FileUpload::make('berkas'),
             ]);
     }

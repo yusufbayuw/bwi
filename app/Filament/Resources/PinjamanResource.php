@@ -297,6 +297,7 @@ class PinjamanResource extends Resource
                         ->description('atur cicilan per minggu')
                         ->schema([
                             TextInput::make('nominal_bmpa_max')
+                                ->readOnly()
                                 ->mask(RawJs::make(<<<'JS'
                                     $money($input, ',', '.', 2)
                                 JS))
@@ -334,6 +335,7 @@ class PinjamanResource extends Resource
                                 $money($input, ',', '.', 2)
                             JS))
                                 ->label("Total Pinjaman Kelompok")
+                                ->readOnly()
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
                                 ,//->disabled(),
@@ -343,6 +345,7 @@ class PinjamanResource extends Resource
                                     $money($input, ',', '.', 2)
                                 JS))
                                 ->label('Cicilan Kelompok per Minggu')
+                                ->readOnly()
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                             Select::make('status')
@@ -357,7 +360,7 @@ class PinjamanResource extends Resource
                             Toggle::make('acc_pinjaman')
                                 ->hidden(!($userAuth->hasRole($adminBendaharaAccess))),
                             DatePicker::make('tanggal_cicilan_pertama')
-                                ->format('dd/mm/yyyy')
+                                ->date('d/m/Y')
                                 ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
                                 ->required(!($userAuth->hasRole($adminBendaharaAccess))),
                             FileUpload::make('berkas'),
