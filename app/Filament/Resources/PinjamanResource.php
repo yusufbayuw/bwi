@@ -35,7 +35,7 @@ use Filament\Forms\Components\Component;
 
 class PinjamanResource extends Resource
 {
-    public Pinjaman $pinjaman;
+    //public Pinjaman $pinjaman;
 
     protected static ?string $model = Pinjaman::class;
 
@@ -45,13 +45,13 @@ class PinjamanResource extends Resource
 
     protected static ?string $slug = 'pinjaman';
 
-    public function mutateFormDataBeforeFill(array $data): array
+    /* public function mutateFormDataBeforeFill(array $data): array
     {
         // STORE TEAMS
         $data['users'] = $this->pinjaman->users()->get()->toArray();
 
         return $data;
-    }
+    } */
 
     public static function getEloquentQuery(): Builder
     {
@@ -218,9 +218,9 @@ class PinjamanResource extends Resource
                                                 ->mask(RawJs::make(<<<'JS'
                                                         $money($input, ',', '.', 0)
                                                     JS))
-                                                ->disabled()
                                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
-                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
+                                                ->disabled(),
                                         ])
                                         ->live(debounce: 500)
                                         ->maxItems(9)
@@ -336,24 +336,24 @@ class PinjamanResource extends Resource
                                 ->label("Total Pinjaman Kelompok")
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                                ->disabled(),
+                                ,//->disabled(),
                             TextInput::make('cicilan_kelompok')
+                                //->disabled()
                                 ->mask(RawJs::make(<<<'JS'
                                     $money($input, ',', '.', 2)
                                 JS))
                                 ->label('Cicilan Kelompok per Minggu')
                                 ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
-                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                                ->disabled(),
+                                ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                             Select::make('status')
+                                //->disabled()
                                 ->options([
                                     'Pembuatan Kelompok' => 'Pembuatan Kelompok',
                                     'Menunggu Verifikasi' => 'Menunggu Verifikasi',
                                     'Cicilan Berjalan' => 'Cicilan Berjalan',
                                     'Sudah Lunas' => 'Sudah Lunas',
                                 ])
-                                ->default('Pembuatan Kelompok')
-                                ->disabled(),
+                                ->default('Pembuatan Kelompok'),
                             Toggle::make('acc_pinjaman')
                                 ->hidden(!($userAuth->hasRole($adminBendaharaAccess))),
                             DatePicker::make('tanggal_cicilan_pertama')
@@ -372,8 +372,9 @@ class PinjamanResource extends Resource
             BLADE)))
                     ->columnSpanFull(),
             ])
-            ->statePath('data')
-            ->model($this->pinjaman);
+            //->statePath('data')
+            //->model($this->pinjaman)
+            ;
     }
 
     public static function table(Table $table): Table

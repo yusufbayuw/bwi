@@ -2,6 +2,8 @@
 
 namespace App\Observers;
 
+use App\Models\Cicilan;
+use App\Models\User;
 use App\Models\Mutasi;
 use App\Models\Pinjaman;
 
@@ -13,9 +15,18 @@ class PinjamanObserver
     public function created(Pinjaman $pinjaman): void
     {
         //
+        
+    }
+
+    /**
+     * Handle the Pinjaman "updated" event.
+     */
+    public function updated(Pinjaman $pinjaman): void
+    {
+        //
         $totalPinjaman = (float)$pinjaman->total_pinjaman;
 
-        if ($totalPinjaman) {
+        if ($totalPinjaman && $pinjaman->acc_pinjaman && $pinjaman->tanggal_cicilan_pertama) {
             $pinjaman_id = $pinjaman->id;
             $cabang_id = $pinjaman->cabang_id;
 
@@ -34,22 +45,39 @@ class PinjamanObserver
                 'keterangan' => "Pinjaman kelompok ".$pinjaman->nama_kelompok,
             ]);
 
-            $jumlahAnggota = $pinjaman->jumlah_anggota;
+            $lamaCicilan = (int)$pinjaman->lama_cicilan;
+            $userIds = $pinjaman->list_anggota;
 
-            dd($pinjaman->list_anggota);
-            for ($i=1; $i <= $jumlahAnggota ; $i++) { 
-                #
+            foreach ($userIds as $userIdData) {
+                $userId = $userIdData['user_id'];
+                $user = User::find($userId);
+
+                if ($user) {
+                    $user->pinjaman_id = $pinjaman_id;
+                    $user->is_kelompok = true;
+                    $user->save();
+                }
+                
             }
 
-        }
-    }
+            $nominalCicilan = (float)$pinjaman->total_pinjaman / $lamaCicilan;
+            $tglCicilan = $pinjaman->tanggal_cicilan_pertama;
 
-    /**
-     * Handle the Pinjaman "updated" event.
-     */
-    public function updated(Pinjaman $pinjaman): void
-    {
-        //
+            if ($lamaCicilan) {
+                for ($i=1; $i <= $lamaCicilan; $i++) { 
+                    Cicilan::create([
+                        'cabang_id' => $cabang_id,
+                        'pinjaman_id' => $pinjaman_id,
+                        'nominal_cicilan' => $nominalCicilan,	
+                        'tanggal_cicilan' => $tglCicilan,	
+                        'tagihan_ke' => $i,	
+                        'is_final' => ($i === $lamaCicilan) ? true : false,	
+                    ]);
+                }
+            }
+
+
+        }
     }
 
     /**
