@@ -20,6 +20,8 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
+use Swis\Filament\Backgrounds\ImageProviders\Triangles;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -72,6 +74,8 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 BreezyCore::make(),
                 FilamentShieldPlugin::make(),
+                FilamentBackgroundsPlugin::make()
+                    ->imageProvider(Triangles::make()),
             ])->collapsedSidebarWidth(0);
     }
 }
