@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\CustomMenuWidget;
+use App\Filament\Widgets\menuGrid;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
@@ -55,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
             //->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                menuGrid::class,
             ])
             ->breadcrumbs(false)
             ->middleware([
@@ -76,6 +78,6 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make(),
                 FilamentBackgroundsPlugin::make()
                     ->imageProvider(Triangles::make()),
-            ])->collapsedSidebarWidth(0);
+            ]);
     }
 }
