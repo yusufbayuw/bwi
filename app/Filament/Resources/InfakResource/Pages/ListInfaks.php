@@ -6,6 +6,7 @@ use Filament\Actions;
 use App\Filament\Resources\InfakResource;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Widgets\BottomFooterWidget;
+use EightyNine\ExcelImport\ExcelImportAction;
 
 class ListInfaks extends ListRecords
 {
@@ -14,6 +15,9 @@ class ListInfaks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ExcelImportAction::make()
+                ->color("primary")
+                ->hidden(!auth()->user()->hasRole('super_admin')),
             Actions\CreateAction::make(),
         ];
     }
