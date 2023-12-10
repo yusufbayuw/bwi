@@ -1,7 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <div class="flex flex-wrap items-center justify-between">
-            <div class="flex flex-wrap gap-2 items-center justify-auto">
+            <div class="flex flex-wrap gap-2 items-center content-start justify-between">
                 @if ($dasborUrl)    
                 <a href="{{ $dasborUrl }}">
                 <div
@@ -80,8 +79,7 @@
                     </div>
                 </a>
                 @endif
-            </div>
-        </div>      
+            </div>     
     </x-filament::section>
 </x-filament-widgets::widget>
 
