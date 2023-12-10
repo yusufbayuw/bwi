@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\InfakResource\Pages;
 
-use App\Filament\Resources\InfakResource;
 use Filament\Actions;
+use App\Filament\Resources\InfakResource;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Widgets\BottomFooterWidget;
 
 class ListInfaks extends ListRecords
 {
@@ -14,6 +15,13 @@ class ListInfaks extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            BottomFooterWidget::class,
         ];
     }
 }

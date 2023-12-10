@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\PinjamanResource\Pages;
 
-use App\Filament\Resources\PinjamanResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\PinjamanResource;
+use App\Filament\Widgets\BottomFooterWidget;
 
 class ListPinjamen extends ListRecords
 {
@@ -14,6 +15,13 @@ class ListPinjamen extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            BottomFooterWidget::class,
         ];
     }
 }

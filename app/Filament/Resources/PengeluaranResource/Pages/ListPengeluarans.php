@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\PengeluaranResource\Pages;
 
-use App\Filament\Resources\PengeluaranResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Widgets\BottomFooterWidget;
+use App\Filament\Resources\PengeluaranResource;
 
 class ListPengeluarans extends ListRecords
 {
@@ -14,6 +15,13 @@ class ListPengeluarans extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            BottomFooterWidget::class,
         ];
     }
 }

@@ -6,7 +6,7 @@ use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\Widget;
 use Filament\Facades\Filament;
 
-class menuGrid extends Widget
+class MenuGridWidget extends Widget
 {
     use HasWidgetShield;
 
@@ -35,7 +35,7 @@ class menuGrid extends Widget
                     $cabangUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Anggota') {
                     $anggotaUrl = $navigationItem->getUrl();
-                } elseif ($label === 'Infaq') {
+                } elseif ($label === 'Infak') {
                     $infaqUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Pinjaman') {
                     $pinjamanUrl = $navigationItem->getUrl();

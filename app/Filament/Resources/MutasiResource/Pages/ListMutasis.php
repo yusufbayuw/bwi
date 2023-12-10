@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\MutasiResource\Pages;
 
-use App\Filament\Resources\MutasiResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use App\Filament\Resources\MutasiResource;
+use App\Filament\Widgets\BottomFooterWidget;
 
 class ListMutasis extends ListRecords
 {
@@ -14,6 +15,13 @@ class ListMutasis extends ListRecords
     {
         return [
             //Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            BottomFooterWidget::class,
         ];
     }
 }
