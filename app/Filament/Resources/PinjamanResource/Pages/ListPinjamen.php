@@ -22,10 +22,10 @@ class ListPinjamen extends ListRecords
         ];
     }
 
-    protected function getFooterWidgets(): array
+    /* protected function getFooterWidgets(): array
     {
         return [
             BottomFooterWidget::class,
         ];
-    }
+    } */
 }
