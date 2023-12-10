@@ -143,8 +143,8 @@ class PengeluaranResource extends Resource
             ->columns([
                 TextColumn::make('no')
                     ->rowIndex(isFromZero: false),
-                TextColumn::make('cabang_id')
-                    ->numeric()
+                TextColumn::make('cabangs.nama_cabang')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('jenis')
                     ->searchable(),

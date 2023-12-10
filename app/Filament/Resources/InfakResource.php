@@ -53,6 +53,13 @@ class InfakResource extends Resource
                     ->label('Cabang')
                     ->relationship('cabangs', 'nama_cabang') :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
+                Select::make('jenis')
+                    ->label('Sumber Infak')
+                    ->options([
+                        "Kotak Infaq" => "Kotak Infaq",
+                        "Anggota" => "Anggota",
+                        "Donatur" => "Donatur"
+                    ]),
                 Select::make('user_id')
                     ->label('Anggota')
                     ->options(($userAuthAdminAccess) ? $userRecord->pluck('name', 'id') : $userRecord->where('cabang_id', $userAuth->cabang_id)->pluck('name', 'id')),
@@ -72,14 +79,16 @@ class InfakResource extends Resource
             ->columns([
                 TextColumn::make('no')
                     ->rowIndex(isFromZero: false),
-                TextColumn::make('cabang_id')
-                    ->numeric()
+                TextColumn::make('cabangs.nama_cabang')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('user_id')
-                    ->numeric()
+                TextColumn::make('jenis')
+                    ->label("Sumber")
                     ->sortable(),
-                TextColumn::make('jenis_anggota')
-                    ->searchable(),
+                TextColumn::make('users.name')
+                    ->label("Nama")
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('nominal')
                     ->searchable()
                     ->numeric(
