@@ -17,6 +17,7 @@ class ListCabangs extends ListRecords
         return [
             ExcelImportAction::make()
                 ->color("primary")
+                ->icon('heroicon-o-arrow-up-tray')
                 ->hidden(!auth()->user()->hasRole('super_admin')),
             Actions\CreateAction::make(),
         ];

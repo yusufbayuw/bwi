@@ -27,6 +27,7 @@ use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class UserResource extends Resource
 {
@@ -151,7 +152,8 @@ class UserResource extends Resource
 
         return $table
             ->columns([
-               TextColumn::make('no')
+                $userAuthAdminAccess ? TextColumn::make('id')
+                ->label('ID') : TextColumn::make('no')
                     ->rowIndex(isFromZero: false),
                 TextColumn::make('cabangs.nama_cabang')
                     ->numeric()
@@ -230,6 +232,7 @@ class UserResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
+                ExportBulkAction::make()->hidden(!$userAuth->hasRole(['super_admin', 'guru_bk'])),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
