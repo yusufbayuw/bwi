@@ -54,6 +54,7 @@ class CicilanObserver
                 if ($user) {
                     $user->pinjaman_id = null;
                     $user->is_kelompok = false;
+                    $user->bmpa = (float)$user->bmpa + 500000; 
                     $user->save();
                 }
                 

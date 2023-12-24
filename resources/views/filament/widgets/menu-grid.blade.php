@@ -79,6 +79,28 @@
                     </div>
                 </a>
                 @endif
+                @if ($mutasiUrl)
+                <a href="{{ $mutasiUrl }}">
+                    <div
+                        class="flex flex-col items-center justify-center w-20 cursor-pointer h-20 text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                          </svg>                          
+                        <p class="text-sm mt-1">Mutasi</p>
+                    </div>
+                </a>
+                @endif
+                @if ($laporanUrl)
+                <a href="{{ $laporanUrl }}">
+                    <div
+                        class="flex flex-col items-center justify-center w-20 cursor-pointer h-20 text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                          </svg>                                                  
+                        <p class="text-sm mt-1">Laporan</p>
+                    </div>
+                </a>
+                @endif
             </div>     
     </x-filament::section>
 </x-filament-widgets::widget>

@@ -6,6 +6,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\MutasiResource;
 use App\Filament\Widgets\BottomFooterWidget;
+use App\Filament\Widgets\StatsOverview;
 use EightyNine\ExcelImport\ExcelImportAction;
 
 class ListMutasis extends ListRecords
@@ -22,10 +23,15 @@ class ListMutasis extends ListRecords
         ];
     }
 
-    /* protected function getFooterWidgets(): array
+    protected function getFooterWidgets(): array
     {
         return [
             BottomFooterWidget::class,
         ];
-    } */
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [StatsOverview::class];
+    }
 }

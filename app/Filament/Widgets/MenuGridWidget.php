@@ -25,6 +25,7 @@ class MenuGridWidget extends Widget
         $pinjamanUrl = null;
         $cicilanUrl = null;
         $pengeluaranUrl = null;
+        $laporanUrl = null;
 
         foreach ($navigation as $key => $nav) {
             $item =  $nav->getItems()->toArray();
@@ -44,10 +45,12 @@ class MenuGridWidget extends Widget
                 } elseif ($label === 'Pengeluaran') {
                     $pengeluaranUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Mutasi') {
-                    $pengeluaranUrl = $navigationItem->getUrl();
+                    $mutasiUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Peran') {
-                    $pengeluaranUrl = $navigationItem->getUrl();
-                } 
+                    $peranUrl = $navigationItem->getUrl();
+                } elseif ($label === 'Laporan') {
+                    $laporanUrl = $navigationItem->getUrl();
+                }
             }
         }
         
@@ -59,7 +62,8 @@ class MenuGridWidget extends Widget
             'pinjamanUrl' => $pinjamanUrl,
             'cicilanUrl' => $cicilanUrl,
             'pengeluaranUrl' => $pengeluaranUrl,
-            'navigation' => $navigation,
+            'mutasiUrl' => $mutasiUrl,
+            'laporanUrl' => $laporanUrl,
         ];
     }
 }

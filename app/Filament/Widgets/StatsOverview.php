@@ -2,26 +2,44 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Cabang;
 use App\Models\Mutasi;
-use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverview extends BaseWidget
 {
     protected function getStats(): array
-    { 
-        $userAuthCabang = auth()->user()->cabang_id;
+    {
+        $userAuth = auth()->user();
+
+        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+            $cabangs = Cabang::pluck('id')->toArray();
+            $saldoUmum = 0;
+            $saldoKeamilan = 0;
+            $saldoCSR = 0;
+            $mutasiAll = Mutasi::all();
+            foreach ($cabangs as $key => $cabangid) {
+                $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->sortByDesc('created_at')->first();
+                $saldoUmum += (float)($mutasiCabang->saldo_umum);
+                $saldoKeamilan += (float)($mutasiCabang->saldo_keamilan);
+                $saldoCSR += (float)($mutasiCabang->saldo_csr);
+            }
+        } else {
+            $userAuthCabang = $userAuth->cabang_id;
+    
+            $saldo = Mutasi::where('cabang_id', $userAuthCabang)->latest()->first();
+            $saldoUmum = $saldo->saldo_umum;
+            $saldoKeamilan = $saldo->saldo_keamilan;
+            $saldoCSR = $saldo->saldo_csr;
+        }
+
         //$jumlahAnggota = ($userAuthCabang) ? User::where('cabang_id', $userAuthCabang)->count() : User::all()->count();
-        $saldoTotal = Mutasi::where('cabang_id', $userAuthCabang)->latest();
-        $saldo = ($userAuthCabang) ? $saldoTotal->first() : 0;
-        $saldoUmum = ($userAuthCabang) ? $saldo->saldo_umum : 0;
-        $saldoKeamilan = ($userAuthCabang) ? $saldo->saldo_keamilan : 0;
-        $saldoCSR = ($userAuthCabang) ? $saldo->saldo_csr : 0;
+
         return [
-            Stat::make("Saldo Umum", $saldoUmum),//->chart($saldoTotal->pluck('saldo_umum')->toArray()),
-            Stat::make("Saldo Keamilan", $saldoKeamilan),
-            Stat::make("Saldo CSR", $saldoCSR),
+            Stat::make("Saldo Umum", number_format($saldoUmum, 2, ',', '.')), //->chart($saldoTotal->pluck('saldo_umum')->toArray()),
+            Stat::make("Saldo Keamilan", number_format($saldoKeamilan, 2, ',', '.')),
+            Stat::make("Saldo CSR", number_format($saldoCSR, 2, ',', '.')),
         ];
     }
 }

@@ -17,14 +17,15 @@ class ListUsers extends ListRecords
     {
         $userAuthSpAd = auth()->user()->hasRole('super_admin');
         return [
-            ExcelImportAction::make()
+            ExcelImportAction::make('update')
                 ->label('Update')
-                ->color('success')
-                ->hidden(!$userAuthSpAd)
                 ->icon('heroicon-o-arrow-path')
-                ->use(UpdateUserImport::class),
-            ExcelImportAction::make()
+                ->color('success')
+                ->use(UpdateUserImport::class)
+                ->hidden(!$userAuthSpAd),
+            ExcelImportAction::make('import')
                 ->color("primary")
+                ->label('Import')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->hidden(!$userAuthSpAd),
             Actions\CreateAction::make(),
