@@ -20,7 +20,8 @@ class MutasiResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
-    protected static ?string $navigationGroup = 'Catatan';
+    //protected static ?string $navigationGroup = 'Catatan';
+    protected static ?int $navigationSort = 25;
 
     protected static ?string $slug = 'mutasi';
 

@@ -42,7 +42,9 @@ class PinjamanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationGroup = 'Kelompok';
+    //protected static ?string $navigationGroup = 'Kelompok';
+
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $slug = 'pinjaman';
 

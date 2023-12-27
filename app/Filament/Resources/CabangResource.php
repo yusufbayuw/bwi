@@ -27,7 +27,8 @@ class CabangResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
-    protected static ?string $navigationGroup = 'Administrator';
+    //protected static ?string $navigationGroup = 'Administrator';
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'cabang';
 

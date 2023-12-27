@@ -35,11 +35,14 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
 
-    protected static ?string $navigationGroup = 'Anggota';
+    //protected static ?string $navigationGroup = 'Anggota';
+    protected static ?int $navigationSort = 35;
 
     protected static ?string $navigationLabel = 'Anggota';
 
     protected static ?string $slug = 'anggota';
+
+    protected static ?string $modelLabel = 'anggota';
 
     public static function getEloquentQuery(): Builder
     {
@@ -61,8 +64,15 @@ class UserResource extends Resource
             ->schema([
                 Section::make('DATA DIRI')
                     ->schema([
+                        ($userAuthAdminAccess) ? Select::make('cabang_id')
+                            ->label('Cabang')
+                            ->relationship('cabangs', 'nama_cabang') : 
+                            Hidden::make('cabang_id')
+                                ->default($userAuth->cabang_id)
+                                ->dehydrateStateUsing(fn () => $userAuth->cabang_id),
                         TextInput::make('name')
                             ->required()
+                            ->label('Nama Lengkap')
                             ->maxLength(255),
                         TextInput::make('no_hp')
                             ->label('Nomor HP')
@@ -121,10 +131,6 @@ class UserResource extends Resource
                         TextInput::make('username')
                             ->maxLength(255)
                             ->hidden(!($userAuthAdminAccess)),
-                        ($userAuthAdminAccess) ? Select::make('cabang_id')
-                            ->label('Cabang')
-                            ->relationship('cabangs', 'nama_cabang') : 
-                            Hidden::make('cabang_id')->default($userAuth->cabang_id),
                         TextInput::make('password')
                             ->password()
                             ->required(!($userAuthAdminAccess))

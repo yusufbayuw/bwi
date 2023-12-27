@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\LaporanResource\Pages;
-use App\Filament\Resources\LaporanResource\RelationManagers;
-use App\Models\Laporan;
+use App\Filament\Resources\BerkasResource\Pages;
+use App\Filament\Resources\BerkasResource\RelationManagers;
+use App\Models\Berkas;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,31 +13,26 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class LaporanResource extends Resource
+class BerkasResource extends Resource
 {
-    protected static ?string $model = Laporan::class;
+    protected static ?string $model = Berkas::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
-
-    //protected static ?string $navigationGroup = 'Catatan';
-    protected static ?int $navigationSort = 30;
-
-    protected static ?string $slug = 'laporan';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('cabang_id')
-                    ->numeric(),
-                Forms\Components\DatePicker::make('tanggal')
+                Forms\Components\TextInput::make('nama')
+                    ->required()
+                    ->label('Nama Berkas')
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('keterangan')
+                    ->maxLength(255)
+                    ->label('Keterangan Berkas'),
+                Forms\Components\FileUpload::make('file')
+                    ->label('Unggah Berkas')
                     ->required(),
-                Forms\Components\TextInput::make('jenis')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('berkas')
-                    ->required()
-                    ->maxLength(255),
             ]);
     }
 
@@ -45,15 +40,12 @@ class LaporanResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('cabang_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tanggal')
-                    ->date()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('jenis')
+                Tables\Columns\TextColumn::make('nama')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('berkas')
+                Tables\Columns\TextColumn::make('keterangan')
+                    ->searchable(),
+                Tables\Columns\ImageColumn::make('file')
+                    ->label('Berkas')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -68,12 +60,12 @@ class LaporanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->hidden(auth()->user()->hasRole(['super_admin', 'admin_pusat'])),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                ])->hidden(auth()->user()->hasRole(['super_admin', 'admin_pusat'])),
             ]);
     }
 
@@ -87,9 +79,9 @@ class LaporanResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLaporans::route('/'),
-            'create' => Pages\CreateLaporan::route('/create'),
-            'edit' => Pages\EditLaporan::route('/{record}/edit'),
+            'index' => Pages\ListBerkas::route('/'),
+            'create' => Pages\CreateBerkas::route('/create'),
+            'edit' => Pages\EditBerkas::route('/{record}/edit'),
         ];
     }
 }

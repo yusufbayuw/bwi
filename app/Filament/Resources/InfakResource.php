@@ -26,7 +26,8 @@ class InfakResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-gift';
 
-    protected static ?string $navigationGroup = 'Transaksi';
+    //protected static ?string $navigationGroup = 'Transaksi';
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'infaq';
 

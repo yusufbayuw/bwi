@@ -29,7 +29,8 @@ class PengeluaranResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
-    protected static ?string $navigationGroup = 'Transaksi';
+    //protected static ?string $navigationGroup = 'Transaksi';
+    protected static ?int $navigationSort = 15;
 
     protected static ?string $slug = 'pengeluaran';
 
