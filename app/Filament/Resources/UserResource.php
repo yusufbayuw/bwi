@@ -27,6 +27,10 @@ use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Columns\Layout\Panel;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class UserResource extends Resource
@@ -66,10 +70,10 @@ class UserResource extends Resource
                     ->schema([
                         ($userAuthAdminAccess) ? Select::make('cabang_id')
                             ->label('Cabang')
-                            ->relationship('cabangs', 'nama_cabang') : 
+                            ->relationship('cabangs', 'nama_cabang') :
                             Hidden::make('cabang_id')
-                                ->default($userAuth->cabang_id)
-                                ->dehydrateStateUsing(fn () => $userAuth->cabang_id),
+                            ->default($userAuth->cabang_id)
+                            ->dehydrateStateUsing(fn () => $userAuth->cabang_id),
                         TextInput::make('name')
                             ->required()
                             ->label('Nama Lengkap')
@@ -79,16 +83,15 @@ class UserResource extends Resource
                             ->mask('9999 9999 9999 9999'),
                         TextInput::make('email')
                             ->email()
+                            ->hidden(!($userAuthAdminAccess))
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
                             ->label('Nomor KTP')
-                            ->maxLength(16)
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
                             ->label('Nomor KK')
-                            ->maxLength(16)
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
                             ->label('Berkas KK'),
@@ -158,77 +161,96 @@ class UserResource extends Resource
 
         return $table
             ->columns([
-                $userAuthAdminAccess ? TextColumn::make('id')
-                ->label('ID') : TextColumn::make('no')
-                    ->rowIndex(isFromZero: false),
-                TextColumn::make('cabangs.nama_cabang')
-                    ->numeric()
-                    ->sortable()
-                    ->hidden(!($userAuthAdminAccess)),
-                TextColumn::make('pinjamans.nama_kelompok')
-                    ->label('Kelompok')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('name')
-                    ->label('Nama')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('bmpa')
-                    ->label('BMPA')
-                    ->alignment(Alignment::End)
-                    ->searchable()
-                    ->numeric(
-                        decimalPlaces: 2,
-                        decimalSeparator: ',',
-                        thousandsSeparator: '.',
-                    ),
-                TextColumn::make('email')
-                    ->searchable()
-                    ->hidden(!($userAuthAdminAccess)),
-                TextColumn::make('username')
-                    ->searchable()
-                    ->hidden(!($userAuthAdminAccess)),
-                TextColumn::make('no_hp')
-                    ->label('Nomor HP')
-                    ->searchable(),
-                TextColumn::make('nomor_ktp')
-                    ->label('Nomor KTP')
-                    ->searchable(),
-                ImageColumn::make('file_ktp')
-                    ->label('Berkas KTP'),
-                TextColumn::make('nomor_kk')
-                    ->label('Nomor KK')
-                    ->searchable(),
-                ImageColumn::make('file_kk')
-                    ->label('Berkas KK'),
-                TextColumn::make('alamat')
-                    ->searchable()
-                    ->limit(20),
-                TextColumn::make('pekerjaan')
-                    ->searchable(),
-                TextColumn::make('penghasilan_bulanan')
-                    ->label('Penghasilan')
-                    ->searchable()
-                    ->sortable()
-                    ->numeric(
-                        decimalPlaces: 2,
-                        decimalSeparator: ',',
-                        thousandsSeparator: '.',
-                    ),
-                IconColumn::make('is_kelompok')
-                    ->boolean()
-                    ->hidden(!($userAuthAdminAccess)),
-                IconColumn::make('is_can_login')
-                    ->boolean()
-                    ->hidden(!($userAuthAdminAccess)),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Split::make([
+                    Stack::make([$userAuthAdminAccess ? TextColumn::make('id')
+                        ->label('ID') : TextColumn::make('no')
+                        ->rowIndex(isFromZero: false),])->grow(false),
+                    Stack::make([
+                        TextColumn::make('name')
+                            ->label('Nama')
+                            ->weight(FontWeight::Bold)
+                            ->sortable()
+                            ->searchable(),
+                        TextColumn::make('alamat')
+                            ->searchable()
+                            ->limit(20),
+                    ]),
+                    Stack::make([
+                        TextColumn::make('cabangs.nama_cabang')
+                            ->numeric()
+                            ->icon('heroicon-m-building-office')
+                            ->sortable()
+                            ->hidden(!($userAuthAdminAccess)),
+                        TextColumn::make('pinjamans.nama_kelompok')
+                            ->label('Kelompok')
+                            ->icon('heroicon-m-user-group')
+                            ->numeric()
+                            ->sortable(),
+                        TextColumn::make('bmpa')
+                            ->label('BMPA')
+                            //->alignment(Alignment::End)
+                            ->searchable()
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => 'BMPA: ' . number_format($state, 2, ',', '.')),
+                    ]),
+                ])->from('md'),
+                Panel::make([
+                    Split::make([
+                        Stack::make([
+                            TextColumn::make('email')
+                                ->searchable()
+                                ->icon('heroicon-m-envelope')
+                                ->hidden(!($userAuthAdminAccess)),
+                            TextColumn::make('username')
+                                ->searchable()
+                                ->formatStateUsing(fn ($state) => 'Username: ' . $state)
+                                ->hidden(!($userAuthAdminAccess)),
+                            TextColumn::make('no_hp')
+                                ->label('Nomor HP')
+                                ->icon('heroicon-m-phone')
+                                ->searchable(),
+                            TextColumn::make('nomor_ktp')
+                                ->label('Nomor KTP')
+                                ->icon('heroicon-m-identification')
+                                ->formatStateUsing(fn ($state) => 'NIK: ' . $state)
+                                ->searchable(),
+                            TextColumn::make('nomor_kk')
+                                ->label('Nomor KK')
+                                ->formatStateUsing(fn ($state) => 'No. KK: ' . $state)
+                                ->searchable(),
+                            TextColumn::make('pekerjaan')
+                                ->formatStateUsing(fn ($state) => 'Pekerjaan: ' . $state)
+                                ->searchable(),
+                            TextColumn::make('penghasilan_bulanan')
+                                ->label('Penghasilan')
+                                ->searchable()
+                                ->sortable()
+                                ->badge()
+                                ->formatStateUsing(fn ($state) => 'Penghasilan: ' . number_format($state, 2, ',', '.')),
+                            /* IconColumn::make('is_kelompok')
+                                ->boolean()
+                                ->hidden(!($userAuthAdminAccess)),
+                            IconColumn::make('is_can_login')
+                                ->boolean()
+                                ->hidden(!($userAuthAdminAccess)), */
+                        ]),
+                        Stack::make([
+                            ImageColumn::make('file_ktp')
+                                ->label('Berkas KTP'),
+                            ImageColumn::make('file_kk')
+                                ->label('Berkas KK'),
+                        ]),
+                    ]),
+
+                    /* TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true), */
+                ])->collapsible(true),
             ])
             ->filters([
                 //
