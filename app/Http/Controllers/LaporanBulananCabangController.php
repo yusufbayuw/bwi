@@ -9,7 +9,7 @@ class LaporanBulananCabangController extends Controller
 {
     public function generatePDF()
     {
-        $pdf = Pdf::setOptions(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang');
+        $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang');
         return $pdf->stream();//download('invoice.pdf');
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\LaporanBulananCabangController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LaporanBulananCabangController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +15,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', function (Request $request) {
+    $userIP = $request->ip();
+    $userIParray = explode('.', $userIP);
+    if ($userIParray[0] === "10") {
+        return view('welcome');
+    } elseif ($userIParray[0] === "172") {
+        return view('welcome');
+    } elseif ($userIParray[0] === "192") {
+        if ($userIParray[0] === "168") {
+            return view('welcome');
+        } else {
+            return redirect('/bwi');
+        }
+    } else {
+        return redirect('/bwi');
+    }
 });
 Route::get('pdf', [LaporanBulananCabangController::class, 'generatePDF']);

@@ -85,25 +85,24 @@
         <table>
             <thead>
                 <tr>
-                    <th scope="col">SALDO</th>
-                    <th scope="col"></th>
+                    <th colspan="2" scope="col">SALDO</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Saldo Umum:</td>
+                    <td>Saldo Umum</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Saldo Keamilan:</td>
+                    <td>Saldo Keamilan</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Saldo CSR:</td>
+                    <td>Saldo CSR</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Total Saldo:</td>
+                    <td>Total Saldo</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -117,38 +116,15 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Pengeluaran Keamilan:</td>
+                    <td>Pengeluaran Keamilan</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Pengeluaran CSR:</td>
+                    <td>Pengeluaran CSR</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Total Pengeluaran:</td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">INFAK</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Infak Anggota:</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Infak Donatur:</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Infak Kotak Amal:</td>
+                    <td>Total Pengeluaran</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -157,17 +133,20 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th scope="col">PINJAMAN</th>
-                    <th scope="col"></th>
+                    <th colspan="2" scope="col">INFAK</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Pinjaman Kelompok:</td>
+                    <td>Infak Anggota</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Total Pinjaman:</td>
+                    <td>Infak Donatur</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Infak Kotak Amal</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -176,17 +155,34 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th scope="col">CICILAN</th>
-                    <th scope="col"></th>
+                    <th colspan="2" scope="col">PINJAMAN</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Cicilan Kelompok:</td>
+                    <td>Pinjaman Kelompok</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Total Cicilan:</td>
+                    <td>Total Pinjaman</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">CICILAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cicilan Kelompok</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Total Cicilan</td>
                     <td></td>
                 </tr>
             </tbody>
