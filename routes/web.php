@@ -16,7 +16,7 @@ use App\Http\Controllers\LaporanBulananCabangController;
 */
 
 Route::get('/', function (Request $request) {
-    $userIP = $request->ip();
+    $userIP = $request->getClientIp();
     $userIParray = explode('.', $userIP);
     if ($userIParray[0] === "10") {
         return '<p>'.$userIP.'</p>';//view('welcome');
