@@ -19,17 +19,17 @@ Route::get('/', function (Request $request) {
     $userIP = $request->ip();
     $userIParray = explode('.', $userIP);
     if ($userIParray[0] === "10") {
-        return view('welcome');
+        return '<p>'.$userIP.'</p>';//view('welcome');
     } elseif ($userIParray[0] === "172") {
-        return view('welcome');
+        return '<p>'.$userIP.'</p>';//view('welcome');
     } elseif ($userIParray[0] === "192") {
-        if ($userIParray[0] === "168") {
-            return view('welcome');
+        if ($userIParray[1] === "168") {
+            return '<p>'.$userIP.'</p>';//view('welcome');
         } else {
-            return redirect('/bwi');
+            return '<p>'.$userIP.'</p>';//redirect('/bwi');
         }
     } else {
-        return redirect('/bwi');
+        return '<p>'.$userIP.'</p>';//redirect('/bwi');
     }
 });
 Route::get('/privacy-policy', function () {
