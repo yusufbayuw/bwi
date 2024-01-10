@@ -16,8 +16,8 @@ use App\Http\Controllers\LaporanBulananCabangController;
 */
 
 Route::get('/', function (Request $request) {
-    if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
-        $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+    if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+        $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_X_FORWARDED_FOR"];
     }
     $userIP = $_SERVER['REMOTE_ADDR']; //$request->ip();
     $userIParray = explode('.', $userIP);
