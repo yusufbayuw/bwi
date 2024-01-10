@@ -32,4 +32,10 @@ Route::get('/', function (Request $request) {
         return redirect('/bwi');
     }
 });
+Route::get('/privacy-policy', function () {
+    return view('privacy');
+});
+Route::get('/terms-and-conditions', function () {
+    return view('tnc');
+});
 Route::get('pdf', [LaporanBulananCabangController::class, 'generatePDF']);
