@@ -123,7 +123,7 @@ class InfakResource extends Resource
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
-            ])->deferLoading();
+            ]);
     }
 
     public static function getRelations(): array
