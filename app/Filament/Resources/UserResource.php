@@ -35,11 +35,13 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class UserResource extends Resource
 {
+    const SUPER_ADMIN_ROLE = 'super_admin';
+    const ADMIN_PUSAT_ROLE = 'admin_pusat';
+
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
 
-    //protected static ?string $navigationGroup = 'Anggota';
     protected static ?int $navigationSort = 35;
 
     protected static ?string $navigationLabel = 'Anggota';
@@ -48,20 +50,29 @@ class UserResource extends Resource
 
     protected static ?string $modelLabel = 'anggota';
 
+    protected function hasAdminAccess(): bool
+    {
+        $adminRoles = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
+        return auth()->user()->hasRole($adminRoles);
+    }
+
+    protected function transfrormNumberForState($state)
+    {
+        return str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state));
+    }
+    
     public static function getEloquentQuery(): Builder
     {
-        $userAuth = auth()->user();
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
-            return parent::getEloquentQuery();
-        } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
-        }
+        return parent::getEloquentQuery()->when(
+            !(new self())->hasAdminAccess(),
+            fn ($query) => $query->where('cabang_id', auth()->user()->cabang_id)
+        );
     }
 
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $form
@@ -86,14 +97,18 @@ class UserResource extends Resource
                             ->hidden(!($userAuthAdminAccess))
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
+                            ->required()
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
+                            ->required()
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
+                            ->required()
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
+                            ->required()
                             ->label('Berkas KK'),
                         Textarea::make('alamat')
                             ->maxLength(255),
@@ -107,7 +122,7 @@ class UserResource extends Resource
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
                             JS))
-                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                            ->dehydrateStateUsing(fn ($state) => $this->transfrormNumberForState($state))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('Kelompok Pinjaman')
@@ -126,7 +141,7 @@ class UserResource extends Resource
                             JS))
                             ->disabled()
                             ->default(500000)
-                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                            ->dehydrateStateUsing(fn ($state) => $this->transfrormNumberForState($state))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('ADMIN SETTING')
@@ -156,7 +171,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $table
@@ -260,14 +275,14 @@ class UserResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                ExportBulkAction::make()->hidden(!$userAuth->hasRole(['super_admin', 'guru_bk'])),
+                ExportBulkAction::make()->hidden(!$userAuth->hasRole([self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE])),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
-            ])->deferLoading();
+            ]);
     }
 
     public static function getRelations(): array
