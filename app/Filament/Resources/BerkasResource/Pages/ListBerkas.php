@@ -14,7 +14,7 @@ class ListBerkas extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()->hidden(!(auth()->user()->hasRoles(['super_admin', 'admin_pusat']))),
         ];
     }
 
