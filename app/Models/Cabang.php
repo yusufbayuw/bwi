@@ -20,31 +20,31 @@ class Cabang extends Model
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'user_id', 'id');
+        return $this->hasMany(User::class, 'cabang_id', 'id');
     }
 
     public function infaks(): HasMany
     {
-        return $this->hasMany(Infak::class);
+        return $this->hasMany(Infak::class, 'cabang_id', 'id');
     }
 
     public function cicilans(): HasMany
     {
-        return $this->hasMany(Cicilan::class);
+        return $this->hasMany(Cicilan::class, 'cabang_id', 'id');
     }
 
     public function pengeluarans(): HasMany
     {
-        return $this->hasMany(Pengeluaran::class);
+        return $this->hasMany(Pengeluaran::class, 'cabang_id', 'id');
     }
 
     public function pinjamans(): HasMany
     {
-        return $this->hasMany(Pinjaman::class);
+        return $this->hasMany(Pinjaman::class, 'cabang_id', 'id');
     }
 
     public function mutasis(): HasMany
     {
-        return $this->hasMany(Mutasi::class);
+        return $this->hasMany(Mutasi::class, 'cabang_id', 'id');
     }
 }

@@ -18,7 +18,7 @@ class Cicilan extends Model
 
     public function mutasis(): HasOne
     {
-        return $this->hasOne(Mutasi::class, 'mutasi_id', 'id');
+        return $this->hasOne(Mutasi::class, 'cicilan_id', 'id');
     }
 
     public function cabangs(): BelongsTo

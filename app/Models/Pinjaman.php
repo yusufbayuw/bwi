@@ -20,17 +20,17 @@ class Pinjaman extends Model
 
     public function mutasis(): HasOne
     {
-        $this->hasOne(Mutasi::class, 'mutasi_id', 'id');
+        return $this->hasOne(Mutasi::class, 'pinjaman_id', 'id');
     }
 
     public function users(): HasMany
     {
-        $this->hasMany(User::class, 'user_id', 'id');
+        return $this->hasMany(User::class, 'pinjaman_id', 'id');
     }
 
     public function list_anggota(): HasMany
     {
-        $this->hasMany(User::class, 'user_id', 'id');
+        return $this->hasMany(User::class, 'user_id', 'id');
     }
 
     public function cabangs(): BelongsTo

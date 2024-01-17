@@ -13,7 +13,7 @@ class Infak extends Model
 
     public function users(): BelongsTo
     {
-        $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function cabangs(): BelongsTo
@@ -23,6 +23,6 @@ class Infak extends Model
 
     public function mutasis(): HasMany
     {
-        return $this->hasMany(Mutasi::class, 'mutasi_id', 'id');
+        return $this->hasMany(Mutasi::class, 'infak_id', 'id');
     }
 }

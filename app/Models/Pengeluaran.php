@@ -13,11 +13,11 @@ class Pengeluaran extends Model
 
     public function cabangs(): BelongsTo
     {
-        return $this->belongsTo(Cabang::class);
+        return $this->belongsTo(Cabang::class, 'cabang_id', 'id');
     }
 
     public function mutasis(): HasOne
     {
-        return $this->hasOne(Mutasi::class);
+        return $this->hasOne(Mutasi::class, 'pengeluaran_id', 'id');
     }
 }

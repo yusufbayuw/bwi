@@ -86,7 +86,7 @@ class InfakResource extends Resource
                 TextColumn::make('jenis')
                     ->label("Sumber")
                     ->sortable(),
-                TextColumn::make('user_id')
+                TextColumn::make('users.user_id')
                     ->label("Nama")
                     ->searchable()
                     ->sortable(),

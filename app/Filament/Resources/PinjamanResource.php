@@ -178,7 +178,7 @@ class PinjamanResource extends Resource
                         DatePicker::make('tanggal_cicilan_pertama')
                             ->date('d/m/Y')
                             ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
-                            ->required(!($userAuth->hasRole($adminBendaharaAccess))),
+                            ->required($userAuth->hasRole($adminBendaharaAccess)),
                         FileUpload::make('berkas'),
                     ])
 

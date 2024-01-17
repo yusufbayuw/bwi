@@ -63,7 +63,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function infaks(): HasMany
     {
-        return $this->hasMany(Infak::class, 'infak_id', 'id');
+        return $this->hasMany(Infak::class, 'user_id', 'id');
     }
 
     public function pinjamans(): BelongsTo
