@@ -56,11 +56,6 @@ class UserResource extends Resource
         return auth()->user()->hasRole($adminRoles);
     }
 
-    protected function transfrormNumberForState($state)
-    {
-        return str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state));
-    }
-
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->when(
@@ -74,7 +69,7 @@ class UserResource extends Resource
         $userAuth = auth()->user();
         $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-
+      
         return $form
             ->schema([
                 Section::make('DATA DIRI')
@@ -122,7 +117,7 @@ class UserResource extends Resource
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
                             JS))
-                            ->dehydrateStateUsing(fn ($state) => $this->transfrormNumberForState($state))
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('Kelompok Pinjaman')
@@ -141,7 +136,7 @@ class UserResource extends Resource
                             JS))
                             ->disabled()
                             ->default(500000)
-                            ->dehydrateStateUsing(fn ($state) => $this->transfrormNumberForState($state))
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('ADMIN SETTING')
