@@ -117,7 +117,7 @@ class UserResource extends Resource
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
                             JS))
-                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('Kelompok Pinjaman')
@@ -136,7 +136,7 @@ class UserResource extends Resource
                             JS))
                             ->disabled()
                             ->default(500000)
-                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state))
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                     ]),
                 Section::make('ADMIN SETTING')
