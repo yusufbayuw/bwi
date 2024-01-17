@@ -93,6 +93,7 @@ class UserResource extends Resource
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
                             ->required()
+                            ->unique()
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
@@ -100,6 +101,7 @@ class UserResource extends Resource
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
                             ->required()
+                            ->unique()
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
