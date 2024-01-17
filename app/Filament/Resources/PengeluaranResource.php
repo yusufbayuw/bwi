@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PengeluaranResource\Pages;
 use App\Filament\Resources\PengeluaranResource\RelationManagers;
 use Closure;
+use Filament\Tables\Columns\ImageColumn;
 
 class PengeluaranResource extends Resource
 {
@@ -153,8 +154,7 @@ class PengeluaranResource extends Resource
                     ->searchable(),
                 TextColumn::make('nominal')
                     ->searchable(),
-                TextColumn::make('berkas')
-                    ->searchable(),
+                ImageColumn::make('berkas'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

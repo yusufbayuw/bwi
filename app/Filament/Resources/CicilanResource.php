@@ -21,6 +21,7 @@ use App\Filament\Resources\CicilanResource\RelationManagers;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\ImageColumn;
 
 class CicilanResource extends Resource
 {
@@ -118,8 +119,7 @@ class CicilanResource extends Resource
                     ->label('Tanggal Pembayaran')
                     ->date()
                     ->sortable(),
-                TextColumn::make('berkas')
-                    ->searchable(),
+                ImageColumn::make('berkas'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

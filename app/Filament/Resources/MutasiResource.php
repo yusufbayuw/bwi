@@ -29,9 +29,9 @@ class MutasiResource extends Resource
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
-            return parent::getEloquentQuery()->latest();
+            return parent::getEloquentQuery();
         } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id)->latest();
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
         }
     }
 

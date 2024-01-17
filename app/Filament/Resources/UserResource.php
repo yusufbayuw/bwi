@@ -217,11 +217,11 @@ class UserResource extends Resource
                 TextColumn::make('nomor_ktp')
                     ->label('Nomor KTP')
                     ->icon('heroicon-m-identification')
-                    ->formatStateUsing(fn ($state) => 'NIK: ' . $state)
+                    //->formatStateUsing(fn ($state) => 'NIK: ' . $state)
                     ->searchable(),
                 TextColumn::make('nomor_kk')
                     ->label('Nomor KK')
-                    ->formatStateUsing(fn ($state) => 'No. KK: ' . $state)
+                    //->formatStateUsing(fn ($state) => 'No. KK: ' . $state)
                     ->searchable(),
                 TextColumn::make('pekerjaan')
                     ->formatStateUsing(fn ($state) => 'Pekerjaan: ' . $state)
