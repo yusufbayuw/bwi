@@ -119,7 +119,7 @@ class CicilanResource extends Resource
                     ->label('Tanggal Pembayaran')
                     ->date()
                     ->sortable(),
-                ImageColumn::make('berkas'),
+                ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

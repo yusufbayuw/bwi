@@ -47,8 +47,7 @@ class BerkasResource extends Resource
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('file')
-                    ->label('Berkas')
-                    ->searchable(),
+                    ->label('Berkas'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
