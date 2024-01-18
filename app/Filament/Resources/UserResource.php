@@ -242,9 +242,11 @@ class UserResource extends Resource
                                 ->hidden(!($userAuthAdminAccess)), */
 
                 ImageColumn::make('file_ktp')
-                    ->label('Berkas KTP'),
+                    ->label('Berkas KTP')
+                    ->simpleLightbox(),
                 ImageColumn::make('file_kk')
-                    ->label('Berkas KK'),
+                    ->label('Berkas KK')
+                    ->simpleLightbox(),
 
 
 

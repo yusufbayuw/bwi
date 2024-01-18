@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateMutasi extends CreateRecord
 {
     protected static string $resource = MutasiResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

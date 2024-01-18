@@ -154,7 +154,7 @@ class PengeluaranResource extends Resource
                     ->searchable(),
                 TextColumn::make('nominal')
                     ->searchable(),
-                ImageColumn::make('berkas'),
+                ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

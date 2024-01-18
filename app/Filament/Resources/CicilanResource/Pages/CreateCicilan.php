@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateCicilan extends CreateRecord
 {
     protected static string $resource = CicilanResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

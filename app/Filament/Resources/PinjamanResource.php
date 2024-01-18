@@ -209,7 +209,7 @@ class PinjamanResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                ImageColumn::make('berkas'),
+                ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('nominal_bmpa_max')
                     ->searchable()
                     ->numeric(
