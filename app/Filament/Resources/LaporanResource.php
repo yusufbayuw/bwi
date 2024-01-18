@@ -53,8 +53,8 @@ class LaporanResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('jenis')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('berkas')
-                    ->searchable(),
+                Tables\Columns\ImageColumn::make('berkas')
+                    ->simpleLightbox(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

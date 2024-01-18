@@ -19,6 +19,7 @@ use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Get;
 
 class InfakResource extends Resource
 {
@@ -52,6 +53,7 @@ class InfakResource extends Resource
             ->schema([
                 ($userAuthAdminAccess) ? Select::make('cabang_id')
                     ->label('Cabang')
+                    ->live()
                     ->relationship('cabangs', 'nama_cabang') :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('jenis')
@@ -60,10 +62,12 @@ class InfakResource extends Resource
                         "Kotak Infaq" => "Kotak Infaq",
                         "Anggota" => "Anggota",
                         "Donatur" => "Donatur"
-                    ]),
+                    ])->live(),
                 Select::make('user_id')
                     ->label('Anggota')
-                    ->options(($userAuthAdminAccess) ? $userRecord->pluck('name', 'id') : $userRecord->where('cabang_id', $userAuth->cabang_id)->pluck('name', 'id')),
+                    ->live()
+                    ->hidden(fn (Get $get) => $get('jenis') === "Kotak Infaq")
+                    ->options(($userAuthAdminAccess) ? fn (Get $get) => $userRecord->where('cabang_id', $get('cabang_id'))->where('jenis_pengguna', $get('jenis'))->pluck('name', 'id') : $userRecord->where('cabang_id', $userAuth->cabang_id)->where('jenis_pengguna', $get('jenis'))->pluck('name', 'id')),
                 TextInput::make('nominal')
                     ->mask(RawJs::make(<<<'JS'
                             $money($input, ',', '.', 2)

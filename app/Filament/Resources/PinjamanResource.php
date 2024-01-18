@@ -238,6 +238,7 @@ class PinjamanResource extends Resource
                 TextColumn::make('tanggal_cicilan_pertama')
                     ->date()
                     ->sortable(),
+                ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

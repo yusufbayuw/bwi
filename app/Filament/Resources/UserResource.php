@@ -69,7 +69,7 @@ class UserResource extends Resource
         $userAuth = auth()->user();
         $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-      
+
         return $form
             ->schema([
                 Section::make('DATA DIRI')
@@ -84,6 +84,13 @@ class UserResource extends Resource
                             ->required()
                             ->label('Nama Lengkap')
                             ->maxLength(255),
+                        Select::make('jenis_anggota')
+                            ->required()
+                            ->label('Jenis Anggota')
+                            ->options([
+                                "Anggota" => "Anggota",
+                                "Donatur" => "Donatur"
+                            ]),
                         TextInput::make('no_hp')
                             ->label('Nomor HP')
                             ->mask('9999 9999 9999 9999'),
@@ -153,8 +160,8 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->dehydrateStateUsing(static fn (null|string $state): null|string => filled($state) ? Hash::make($state) : null,)
                             ->dehydrated(static fn (null|string $state): bool => filled($state)),
-                        Toggle::make('is_can_login')
-                            ->hidden(!($userAuthAdminAccess)),
+                        //Toggle::make('is_can_login')
+                        //    ->hidden(!($userAuthAdminAccess)),
                         CheckboxList::make('roles')
                             ->relationship('roles', 'name')
                             ->searchable()
@@ -202,7 +209,7 @@ class UserResource extends Resource
                     //->alignment(Alignment::End)
                     ->searchable()
                     ->badge()
-                    ->formatStateUsing(fn ($state) => 'BMPA: ' . number_format($state, 2, ',', '.')),
+                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
 
                 TextColumn::make('email')
                     ->searchable()
@@ -210,7 +217,6 @@ class UserResource extends Resource
                     ->hidden(!($userAuthAdminAccess)),
                 TextColumn::make('username')
                     ->searchable()
-                    ->formatStateUsing(fn ($state) => 'Username: ' . $state)
                     ->hidden(!($userAuthAdminAccess)),
                 TextColumn::make('no_hp')
                     ->label('Nomor HP')
@@ -221,19 +227,23 @@ class UserResource extends Resource
                     ->icon('heroicon-m-identification')
                     //->formatStateUsing(fn ($state) => 'NIK: ' . $state)
                     ->searchable(),
+                ImageColumn::make('file_ktp')
+                    ->label('Berkas KTP')
+                    ->simpleLightbox(),
                 TextColumn::make('nomor_kk')
                     ->label('Nomor KK')
-                    //->formatStateUsing(fn ($state) => 'No. KK: ' . $state)
                     ->searchable(),
+                ImageColumn::make('file_kk')
+                    ->label('Berkas KK')
+                    ->simpleLightbox(),
                 TextColumn::make('pekerjaan')
-                    ->formatStateUsing(fn ($state) => 'Pekerjaan: ' . $state)
                     ->searchable(),
                 TextColumn::make('penghasilan_bulanan')
                     ->label('Penghasilan')
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn ($state) => 'Penghasilan: ' . number_format($state, 2, ',', '.')),
+                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
                 /* IconColumn::make('is_kelompok')
                                 ->boolean()
                                 ->hidden(!($userAuthAdminAccess)),
@@ -241,23 +251,14 @@ class UserResource extends Resource
                                 ->boolean()
                                 ->hidden(!($userAuthAdminAccess)), */
 
-                ImageColumn::make('file_ktp')
-                    ->label('Berkas KTP')
-                    ->simpleLightbox(),
-                ImageColumn::make('file_kk')
-                    ->label('Berkas KK')
-                    ->simpleLightbox(),
-
-
-
-                /* TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-            TextColumn::make('updated_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true), */
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
