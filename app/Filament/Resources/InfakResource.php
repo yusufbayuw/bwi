@@ -64,10 +64,10 @@ class InfakResource extends Resource
                         "Donatur" => "Donatur"
                     ])->live(),
                 Select::make('user_id')
-                    ->label('Anggota')
+                    ->label('Pemberi Infaq')
                     ->live()
                     ->hidden(fn (Get $get) => $get('jenis') === "Kotak Infaq")
-                    ->options(($userAuthAdminAccess) ? fn (Get $get) => $userRecord->where('cabang_id', $get('cabang_id'))->where('jenis_pengguna', $get('jenis'))->pluck('name', 'id') : fn (Get $get) => $userRecord->where('cabang_id', $userAuth->cabang_id)->where('jenis_pengguna', $get('jenis'))->pluck('name', 'id')),
+                    ->options(($userAuthAdminAccess) ? fn (Get $get) => $userRecord->where('cabang_id', $get('cabang_id'))->where('jenis_anggota', $get('jenis'))->pluck('name', 'id') : fn (Get $get) => $userRecord->where('cabang_id', $userAuth->cabang_id)->where('jenis_anggota', $get('jenis'))->pluck('name', 'id')),
                 TextInput::make('nominal')
                     ->mask(RawJs::make(<<<'JS'
                             $money($input, ',', '.', 2)
