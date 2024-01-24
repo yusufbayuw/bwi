@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Mutasi;
@@ -90,18 +91,21 @@ class MutasiResource extends Resource
                     ->sortable(), */
                 TextColumn::make('tanggal')
                     ->sortable()
-                    ->date(),
+                    ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')),
                 TextColumn::make('keterangan')
                     ->searchable(),
                 TextColumn::make('debet')
-                    ->searchable()
+                    ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
                 TextColumn::make('kredit')
-                    ->searchable()
+                    ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
