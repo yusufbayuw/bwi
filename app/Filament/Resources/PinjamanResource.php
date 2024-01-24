@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
@@ -19,9 +20,11 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
@@ -31,8 +34,6 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Section;
 
 class PinjamanResource extends Resource
 {
@@ -205,7 +206,7 @@ class PinjamanResource extends Resource
                 TextColumn::make('jumlah_anggota')
                     ->sortable()
                     ->numeric(
-                        decimalPlaces: 2,
+                        decimalPlaces: 0,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
@@ -237,6 +238,7 @@ class PinjamanResource extends Resource
                     ->boolean(),
                 TextColumn::make('tanggal_cicilan_pertama')
                     ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),
                 ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')

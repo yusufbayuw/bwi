@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use Closure;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Mutasi;
@@ -15,14 +17,13 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PengeluaranResource\Pages;
 use App\Filament\Resources\PengeluaranResource\RelationManagers;
-use Closure;
-use Filament\Tables\Columns\ImageColumn;
 
 class PengeluaranResource extends Resource
 {
@@ -107,8 +108,7 @@ class PengeluaranResource extends Resource
                         fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get, $max_mutasi, $userAuthAdminAccess) {
                             $jenis = $get('jenis');
                             $nilai = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $value));
-                            if ($userAuthAdminAccess)
-                            {
+                            if ($userAuthAdminAccess) {
                                 $max_mutasi = Mutasi::where('cabang_id', $get('cabang_id'))->orderBy('id', 'DESC')->first();
                                 if ($jenis === 'Keamilan' && $nilai > (float)$max_mutasi->saldo_keamilan) {
                                     $fail("Nilai {$attribute} terlalu besar. Saldo Keamilan tidak cukup.");
@@ -151,9 +151,16 @@ class PengeluaranResource extends Resource
                 TextColumn::make('jenis')
                     ->searchable(),
                 TextColumn::make('tanggal')
+                    ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->searchable(),
                 TextColumn::make('nominal')
-                    ->searchable(),
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    )
+                    ->sortable(),
                 ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()

@@ -2,14 +2,17 @@
 
 namespace App\Filament\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
 use App\Models\Infak;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -18,8 +21,6 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Get;
 
 class InfakResource extends Resource
 {
@@ -103,6 +104,7 @@ class InfakResource extends Resource
                     ),
                 TextColumn::make('tanggal')
                     ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

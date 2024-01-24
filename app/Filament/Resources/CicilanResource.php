@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Cicilan;
@@ -9,19 +10,19 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CicilanResource\RelationManagers;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\ImageColumn;
 
 class CicilanResource extends Resource
 {
@@ -98,6 +99,7 @@ class CicilanResource extends Resource
                 TextColumn::make('tanggal_cicilan')
                     ->label('Tanggal Tagihan')
                     ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),    
                 TextColumn::make('nominal_cicilan')
                     ->searchable()
@@ -118,6 +120,7 @@ class CicilanResource extends Resource
                 TextColumn::make('tanggal_bayar')
                     ->label('Tanggal Pembayaran')
                     ->date()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),
                 ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
