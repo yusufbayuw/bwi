@@ -190,6 +190,9 @@ class UserResource extends Resource
                     ->weight(FontWeight::Bold)
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('roles.name')
+                    ->badge()
+                    ->hidden(!($userAuthAdminAccess)),
                 TextColumn::make('alamat')
                     ->searchable()
                     ->limit(20),
