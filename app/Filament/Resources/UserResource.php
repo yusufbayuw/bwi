@@ -100,20 +100,20 @@ class UserResource extends Resource
                             ->hidden(!($userAuthAdminAccess))
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
-                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->unique()
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
-                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
-                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->unique()
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
-                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->label('Berkas KK'),
                         Textarea::make('alamat')
                             ->maxLength(255),
@@ -124,7 +124,7 @@ class UserResource extends Resource
                             ->maxLength(255),
                         TextInput::make('penghasilan_bulanan')
                             ->label('Pendapatan Bulanan Keluarga (Rata-rata)')
-                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
                             JS))
