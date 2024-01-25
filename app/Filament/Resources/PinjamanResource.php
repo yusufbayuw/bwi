@@ -303,7 +303,7 @@ class PinjamanResource extends Resource
         if ($userAuthAdminAccess) {
             $userOption = null;
         } else {
-            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false);
+            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota');
         }
 
         return Repeater::make('list_anggota')
@@ -312,7 +312,7 @@ class PinjamanResource extends Resource
                     ->label('Nama Anggota')
                     ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
                         if ($userAuthAdminAccess) {
-                            return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->pluck('name', 'id');
+                            return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')->pluck('name', 'id');
                         } else {
                             return $userOption->pluck('name', 'id');
                         }

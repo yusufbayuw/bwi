@@ -86,6 +86,7 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Select::make('jenis_anggota')
                             ->required()
+                            ->live()
                             ->label('Jenis Anggota')
                             ->options([
                                 "Anggota" => "Anggota",
@@ -99,30 +100,31 @@ class UserResource extends Resource
                             ->hidden(!($userAuthAdminAccess))
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
-                            ->required()
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
                             ->unique()
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
-                            ->required()
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
-                            ->required()
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
                             ->unique()
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
-                            ->required()
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
                             ->label('Berkas KK'),
                         Textarea::make('alamat')
                             ->maxLength(255),
                     ]),
-                Section::make('DATA PENGHASILAN')
+                Section::make('DATA PENDAPATAN')
                     ->schema([
                         TextInput::make('pekerjaan')
                             ->maxLength(255),
                         TextInput::make('penghasilan_bulanan')
-                            ->label('Penghasilan Bulanan')
+                            ->label('Pendapatan Bulanan Keluarga (Rata-rata)')
+                            ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota')
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
                             JS))
@@ -242,7 +244,7 @@ class UserResource extends Resource
                 TextColumn::make('pekerjaan')
                     ->searchable(),
                 TextColumn::make('penghasilan_bulanan')
-                    ->label('Penghasilan')
+                    ->label('Pendapatan')
                     ->searchable()
                     ->sortable()
                     ->badge()

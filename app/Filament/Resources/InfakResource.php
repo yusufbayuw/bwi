@@ -75,6 +75,12 @@ class InfakResource extends Resource
                         JS))
                     ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                     ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                Select::make('metode')
+                    ->label('Jenis Pembayaran')
+                    ->options([
+                        "Cash Tunai" => "Cash Tunai",
+                        "Transfer Bank" => "Transfer Bank",
+                    ])->default("Cash Tunai"),
                 DatePicker::make('tanggal')->maxDate(now()),
             ]);
     }

@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CicilanResource\RelationManagers;
+use Filament\Forms\Components\Textarea;
 
 class CicilanResource extends Resource
 {
@@ -80,8 +81,12 @@ class CicilanResource extends Resource
                     ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 Hidden::make('is_final')
                     ->disabled(),
-                Toggle::make('status_cicilan'),
-                DatePicker::make('tanggal_bayar'),
+                Toggle::make('status_cicilan')
+                    ->label('Cicilan Telah Dibayar'),
+                DatePicker::make('tanggal_bayar')
+                    ->required(),
+                Textarea::make('catatan')
+                    ->maxLength(255),
                 FileUpload::make('berkas'),
             ]);
     }
@@ -116,6 +121,7 @@ class CicilanResource extends Resource
                         thousandsSeparator: '.',
                     ),
                 IconColumn::make('status_cicilan')
+                    ->label('Status Pembayaran')
                     ->boolean(),
                 TextColumn::make('tanggal_bayar')
                     ->label('Tanggal Pembayaran')
