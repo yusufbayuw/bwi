@@ -13,7 +13,7 @@ class StatsOverview extends BaseWidget
     {
         $userAuth = auth()->user();
 
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
             $cabangs = Cabang::pluck('id')->toArray();
             $saldoUmum = 0;
             $saldoKeamilan = 0;

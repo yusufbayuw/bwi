@@ -61,7 +61,7 @@ class PinjamanResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $userAuth = auth()->user();
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
             return parent::getEloquentQuery();
         } else {
             return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
@@ -71,8 +71,8 @@ class PinjamanResource extends Resource
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
-        $adminBendaharaAccess = ['super_admin', 'admin_pusat', 'bendahara_cabang'];
+        $adminAccess = config('bwi.adminAccess');
+        $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $form
@@ -173,13 +173,13 @@ class PinjamanResource extends Resource
                             ])
                             ->default('Pembuatan Kelompok') */,
                         Toggle::make('acc_pinjaman')
-                            ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
+                            ->hidden(!($userAuth->hasRole($adminAccessApprove)))
                             ->afterStateUpdated(fn (Set $set) => $set('status', 'Cicilan Berjalan'))
                             ->live(),
                         DatePicker::make('tanggal_cicilan_pertama')
                             ->date('d/m/Y')
-                            ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
-                            ->required($userAuth->hasRole($adminBendaharaAccess)),
+                            ->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                            ->required($userAuth->hasRole($adminAccessApprove)),
                         FileUpload::make('berkas'),
                     ])
 
@@ -190,7 +190,7 @@ class PinjamanResource extends Resource
     public static function table(Table $table): Table
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $table
@@ -296,8 +296,8 @@ class PinjamanResource extends Resource
     public static function getItemsRepeater(): Repeater
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
-        $adminBendaharaAccess = ['super_admin', 'admin_pusat', 'bendahara_cabang'];
+        $adminAccess = config('bwi.adminAccess');
+        $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         if ($userAuthAdminAccess) {

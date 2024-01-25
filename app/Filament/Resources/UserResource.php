@@ -52,7 +52,7 @@ class UserResource extends Resource
 
     protected function hasAdminAccess(): bool
     {
-        $adminRoles = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
+        $adminRoles = config('bwi.adminAccess');
         return auth()->user()->hasRole($adminRoles);
     }
 
@@ -67,7 +67,7 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
+        $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $form
@@ -177,7 +177,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         $userAuth = auth()->user();
-        $adminAccess = [self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE];
+        $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $table
@@ -273,7 +273,7 @@ class UserResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                ExportBulkAction::make()->hidden(!$userAuth->hasRole([self::SUPER_ADMIN_ROLE, self::ADMIN_PUSAT_ROLE])),
+                ExportBulkAction::make()->hidden(!$userAuth->hasRole(config('bwi.adminAccess'))),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),

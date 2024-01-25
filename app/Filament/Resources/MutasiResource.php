@@ -29,7 +29,7 @@ class MutasiResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $userAuth = auth()->user();
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
             return parent::getEloquentQuery();
         } else {
             return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);

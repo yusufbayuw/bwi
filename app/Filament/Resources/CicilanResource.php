@@ -41,7 +41,7 @@ class CicilanResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $userAuth = auth()->user();
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
             return parent::getEloquentQuery();
         } else {
             return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
@@ -51,7 +51,7 @@ class CicilanResource extends Resource
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
         
         return $form

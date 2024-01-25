@@ -19818,6 +19818,18 @@
      
 }
 
+    namespace SolutionForest\FilamentSimpleLightBox\Facades { 
+            /**
+     * 
+     *
+     * @see \SolutionForest\FilamentSimpleLightBox\FilamentSimpleLightBox
+     */ 
+        class FilamentSimpleLightBox {
+         
+    }
+     
+}
+
     namespace Spatie\LaravelIgnition\Facades { 
             /**
      * 
@@ -26867,6 +26879,7 @@ namespace  {
             class FilamentBreezy extends \Jeffgreco13\FilamentBreezy\Facades\FilamentBreezy {}
             class Livewire extends \Livewire\Livewire {}
             class Excel extends \Maatwebsite\Excel\Facades\Excel {}
+            class FilamentSimpleLightBox extends \SolutionForest\FilamentSimpleLightBox\Facades\FilamentSimpleLightBox {}
             class Flare extends \Spatie\LaravelIgnition\Facades\Flare {}
      
 }

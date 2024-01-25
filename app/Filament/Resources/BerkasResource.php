@@ -62,12 +62,12 @@ class BerkasResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->hidden(auth()->user()->hasRole(['super_admin', 'admin_pusat'])),
+                Tables\Actions\EditAction::make()->hidden(auth()->user()->hasRole(config('bwi.adminAccess'))),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ])->hidden(auth()->user()->hasRole(['super_admin', 'admin_pusat'])),
+                ])->hidden(auth()->user()->hasRole(config('bwi.adminAccess'))),
             ]);
     }
 

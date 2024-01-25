@@ -47,8 +47,8 @@ class CreatePinjaman extends CreateRecord
     public function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
-        $adminBendaharaAccess = ['super_admin', 'admin_pusat', 'bendahara_cabang'];
+        $adminAccess = config('bwi.adminAccess');
+        $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         return $form
@@ -251,13 +251,13 @@ class CreatePinjaman extends CreateRecord
                                 ])
                                 ->default('Pembuatan Kelompok') */,
                             Toggle::make('acc_pinjaman')
-                                ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
+                                ->hidden(!($userAuth->hasRole($adminAccessApprove)))
                                 ->afterStateUpdated(fn (Set $set) => $set('status', 'Cicilan Berjalan'))
                                 ->live(),
                             DatePicker::make('tanggal_cicilan_pertama')
                                 ->date('d/m/Y')
-                                ->hidden(!($userAuth->hasRole($adminBendaharaAccess)))
-                                ->required(!($userAuth->hasRole($adminBendaharaAccess))),
+                                ->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                                ->required(!($userAuth->hasRole($adminAccessApprove))),
                             FileUpload::make('berkas'),
                         ])
                 ])->submitAction(new HtmlString(Blade::render(<<<BLADE

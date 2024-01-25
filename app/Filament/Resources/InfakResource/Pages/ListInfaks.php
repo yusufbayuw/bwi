@@ -33,7 +33,7 @@ class ListInfaks extends ListRecords
     public function getTabs(): array
     {
         $userAuth = auth()->user();
-        $adminAuth = $userAuth->hasRole(['super_admin', 'admin_pusat']);
+        $adminAuth = $userAuth->hasRole(config('bwi.adminAccess'));
         $cabang_id = $userAuth->cabang_id;
         return [
             null => Tab::make('Semua'),

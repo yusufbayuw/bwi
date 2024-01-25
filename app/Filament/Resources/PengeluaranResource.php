@@ -39,7 +39,7 @@ class PengeluaranResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $userAuth = auth()->user();
-        if ($userAuth->hasRole(['super_admin', 'admin_pusat'])) {
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
             return parent::getEloquentQuery();
         } else {
             return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
@@ -49,7 +49,7 @@ class PengeluaranResource extends Resource
     public static function form(Form $form): Form
     {
         $userAuth = auth()->user();
-        $adminAccess = ['super_admin', 'admin_pusat'];
+        $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
         $max_mutasi = Mutasi::where('cabang_id', $userAuth->cabang_id)->orderBy('id', 'DESC')->first();
 
@@ -61,11 +61,7 @@ class PengeluaranResource extends Resource
                     ->live() :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('jenis')
-                    ->options([
-                        'Keamilan' => 'Pengeluaran Keamilan',
-                        'CSR' => 'Pengeluaran CSR',
-                        //'Umum' => 'Pengeluaran Umum'
-                    ])
+                    ->options(config('bwi.jenis_pengeluaran'))
                     ->required()
                     ->disabled(fn (Get $get) => $get('cabang_id') ? false : true)
                     ->live(),
