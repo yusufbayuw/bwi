@@ -23,6 +23,7 @@ class PengeluaranObserver
             $last_mutasi_umum = (float)($last_mutasi->saldo_umum ?? 0);
             $last_mutasi_keamilan = (float)($last_mutasi->saldo_keamilan ?? 0);
             $last_mutasi_csr = (float)($last_mutasi->saldo_csr ?? 0);
+            $last_mutasi_cadangan = (float)($last_mutasi->saldo_cadangan ?? 0);
 
             $mutasi_2 = ($jenis === "Umum") ? $last_mutasi_umum - $pengeluaran_nominal : $last_mutasi_umum;
             $mutasi_4 = ($jenis === "Keamilan") ? $last_mutasi_keamilan - $pengeluaran_nominal : $last_mutasi_keamilan;
@@ -35,6 +36,7 @@ class PengeluaranObserver
                 'saldo_umum' => $mutasi_2,
                 'saldo_keamilan' => $mutasi_4,
                 'saldo_csr' => $mutasi_6,
+                'saldo_cadangan' => $last_mutasi_cadangan,
                 'keterangan' => "Pengeluaran ".$jenis.": ".$pengeluaran->keterangan,
             ]);
         }

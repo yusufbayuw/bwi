@@ -42,7 +42,7 @@ class CabangResource extends Resource
                 ->isActiveWhen(fn () => request()->routeIs(static::getRouteBaseName() . '.*'))
                 ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
                 ->sort(static::getNavigationSort())
-                ->url((!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? static::getNavigationUrl() : static::getNavigationUrl()."/".Auth::user()->cabang_id),
+                ->url((!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? static::getNavigationUrl() : static::getNavigationUrl()."/".Auth::user()->cabang_id),
         ];
     }
 
@@ -58,7 +58,8 @@ class CabangResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $userOptions = User::all()->pluck('name', 'id');
+        //$userOptions = User::all()->pluck('name', 'id');
+        //fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id');
         return $form
             ->schema([
                 Section::make('CABANG')
@@ -81,39 +82,39 @@ class CabangResource extends Resource
                     ->schema([
                         Select::make('ketua_pembina')
                             ->label('Ketua Pembina')
-                            ->options($userOptions)
+                            ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                             ->searchable(),
                         Repeater::make('anggota_pembina')
                             ->label('Anggota Pembina')
                             ->schema([
                                 Select::make('nama')
-                                    ->options($userOptions)
+                                    ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                                     ->searchable(),
                             ]),
                         Select::make('ketua_pengawas')
                             ->label('Ketua Pengawas')
-                            ->options($userOptions)
+                            ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                             ->searchable(),
                         Repeater::make('anggota_pengawas')
                             ->schema([
                                 Select::make('nama')
-                                    ->options($userOptions)
+                                    ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                                     ->searchable(),
                             ]),
                         Select::make('ketua_pengurus')
                             ->label('Ketua Pengurus')
-                            ->options($userOptions)
+                            ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                             ->searchable(),
                         Repeater::make('sekretaris')
                             ->schema([
                                 Select::make('nama')
-                                    ->options($userOptions)
+                                    ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                                     ->searchable(),
                             ]),
                         Repeater::make('bendahara')
                             ->schema([
                                 Select::make('nama')
-                                    ->options($userOptions)
+                                    ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                                     ->searchable(),
                             ]),
                     ]),
@@ -175,9 +176,9 @@ class CabangResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => (!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? Pages\ListCabangs::route('/') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
+            'index' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ListCabangs::route('/') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
             'create' => Pages\CreateCabang::route('/create'),
-            'view' => (!Auth::check() || Auth::user()->hasRole(['super_admin'])) ? Pages\ViewCabang::route('/{record}') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
+            'view' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ViewCabang::route('/{record}') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
             'edit' => Pages\EditCabang::route('/{record}/edit'),
         ];
     }    

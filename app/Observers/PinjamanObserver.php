@@ -34,6 +34,7 @@ class PinjamanObserver
             $last_mutasi_umum = (float)($last_mutasi->saldo_umum ?? 0);
             $last_mutasi_keamilan = (float)($last_mutasi->saldo_keamilan ?? 0);
             $last_mutasi_csr = (float)($last_mutasi->saldo_csr ?? 0);
+            $last_mutasi_cadangan = (float)($last_mutasi->saldo_cadangan ?? 0);
 
             Mutasi::create([
                 'cabang_id' => $cabang_id,
@@ -42,6 +43,7 @@ class PinjamanObserver
                 'saldo_umum' => $last_mutasi_umum - $totalPinjaman,
                 'saldo_keamilan' => $last_mutasi_keamilan,
                 'saldo_csr' => $last_mutasi_csr,
+                'saldo_cadangan' => $last_mutasi_cadangan,
                 'keterangan' => "Pinjaman kelompok ".$pinjaman->nama_kelompok,
             ]);
 

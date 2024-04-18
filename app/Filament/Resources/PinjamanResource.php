@@ -297,13 +297,13 @@ class PinjamanResource extends Resource
     {
         $userAuth = auth()->user();
         $adminAccess = config('bwi.adminAccess');
-        $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
         if ($userAuthAdminAccess) {
             $userOption = null;
         } else {
             $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota');
+            //$userOptionUser = $userOption->where('is_organ', false);
         }
 
         return Repeater::make('list_anggota')
@@ -314,10 +314,21 @@ class PinjamanResource extends Resource
                         if ($userAuthAdminAccess) {
                             return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')->pluck('name', 'id');
                         } else {
+                            /* if (config('bwi.pinjamanOrganisasi') && $get('../../is_organ'))
+                            {
+                                return $userOptionUser->pluck('name', 'id');
+                            } else {
+                                return $userOption->pluck('name', 'id');
+                            } */
                             return $userOption->pluck('name', 'id');
                         }
                     })
-                    ->afterStateUpdated(fn (Set $set, $state) => $set('bmpa', number_format(User::where('id', $state)->first()->bmpa, 2, ",", ".")))
+                    ->afterStateUpdated(function (Set $set, $state) {
+                        $set('bmpa', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                        /* if (User::find($state)->is_organ ?? false) {
+                            $set('../../is_organ', true);
+                        } */
+                    })
                     ->required()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                 TextInput::make('bmpa')

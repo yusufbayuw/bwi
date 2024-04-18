@@ -74,7 +74,7 @@ class MutasiResource extends Resource
                     ->label('Nama Cabang')
                     ->sortable()
                     ->searchable()
-                    ->hidden(!(auth()->user()->hasRole(['super_admin','admin'])))
+                    ->hidden(!(auth()->user()->hasRole(config('bwi.adminAccess'))))
                     ->toggleable(isToggledHiddenByDefault:false),
                 /* TextColumn::make('pinjaman_id')
                     ->sortable()
@@ -89,10 +89,15 @@ class MutasiResource extends Resource
                 TextColumn::make('infak_id')
                     ->numeric()
                     ->sortable(), */
-                TextColumn::make('tanggal')
+                TextColumn::make('created_at')
+                    ->label('Tanggal')
+                    ->dateTime()
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')),
+                /* TextColumn::make('tanggal')
                     ->sortable()
                     ->date()
-                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')),
+                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')), */
                 TextColumn::make('keterangan')
                     ->searchable(),
                 TextColumn::make('debet')
@@ -132,13 +137,16 @@ class MutasiResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                TextColumn::make('tanggal')
-                    ->date()
-                    ->sortable(),
+                TextColumn::make('saldo_cadangan')
+                    ->searchable()
+                    ->numeric(
+                        decimalPlaces: 2,
+                        decimalSeparator: ',',
+                        thousandsSeparator: '.',
+                    ),
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
