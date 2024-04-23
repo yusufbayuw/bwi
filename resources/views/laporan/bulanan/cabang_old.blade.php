@@ -80,9 +80,113 @@
     </header>
     
     <div class="container">
-        <h1>Laporan Keuangan - Januari 2024</h1>
+        <h2>Laporan Keuangan - Januari 2024</h2>
 
-        
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">SALDO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Saldo Umum</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Saldo Keamilan</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Saldo CSR</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Total Saldo</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">PENGELUARAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pengeluaran Keamilan</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Pengeluaran CSR</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Total Pengeluaran</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">INFAK</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Infak Anggota</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Infak Donatur</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Infak Kotak Amal</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">PINJAMAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pinjaman Kelompok</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Total Pinjaman</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2" scope="col">CICILAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cicilan Kelompok</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Total Cicilan</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     </div>
