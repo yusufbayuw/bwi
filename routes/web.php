@@ -41,4 +41,4 @@ Route::get('/privacy-policy', function () {
 Route::get('/terms-and-conditions', function () {
     return view('tnc');
 });
-Route::get('pdf', [LaporanBulananCabangController::class, 'generatePDF']);
+Route::get('pdf/{cabang_id}/{jenis}', [LaporanBulananCabangController::class, 'laporanBulananCabang']);
