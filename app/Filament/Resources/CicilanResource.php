@@ -100,7 +100,8 @@ class CicilanResource extends Resource
                 TextColumn::make('cabangs.nama_cabang')
                     ->sortable(),
                 TextColumn::make('pinjamans.nama_kelompok')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('tanggal_cicilan')
                     ->label('Tanggal Tagihan')
                     ->date()
