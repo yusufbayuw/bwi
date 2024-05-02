@@ -92,8 +92,8 @@ class MutasiResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Tanggal')
                     ->dateTime()
-                    ->sortable()
-                    ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')),
+                    ->sortable(),
+                    //->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y')),
                 /* TextColumn::make('tanggal')
                     ->sortable()
                     ->date()
@@ -144,9 +144,6 @@ class MutasiResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -166,7 +163,8 @@ class MutasiResource extends Resource
             //])
             ->emptyStateActions([
                 //Tables\Actions\CreateAction::make(),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
     
     public static function getRelations(): array
