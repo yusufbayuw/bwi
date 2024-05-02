@@ -19,7 +19,7 @@ return [
     // role simplified
     'adminAccessSuper' => ['super_admin'],
     'adminAccess' => ['super_admin', 'admin_pusat'],
-    'adminAccessApprove' => ['super_admin', 'admin_pusat', 'pengawas_cabang'],
+    'adminAccessApprove' => ['super_admin', 'admin_pusat', 'pengawas_cabang', 'bendahara_cabang'],
 
     // nama role di filament-shield
     'ketua_pembina' => 'pembina_cabang',
