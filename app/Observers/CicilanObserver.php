@@ -43,24 +43,27 @@ class CicilanObserver
                 'saldo_keamilan' => $last_mutasi_keamilan,
                 'saldo_csr' => $last_mutasi_csr,
                 'saldo_cadangan' => $last_mutasi_cadangan,
-                'keterangan' => "Cicilan ke-".$cicilan->tagihan_ke." kelompok ".Pinjaman::find($cicilan->pinjaman_id)->nama_kelompok,
+                'keterangan' => "Cicilan ke-" . $cicilan->tagihan_ke . " kelompok " . Pinjaman::find($cicilan->pinjaman_id)->nama_kelompok,
             ]);
 
             if ($cicilan->is_final) {
-            $userIds = Pinjaman::find($cicilan->pinjaman_id)->list_anggota;
-            
-            foreach ($userIds as $userIdData) {
-                $userId = $userIdData['user_id'];
-                $user = User::find($userId);
+                $lunas = Pinjaman::find($cicilan->pinjaman_id);
+                $lunas->status = "Lunas";
+                $lunas->save();
 
-                if ($user) {
-                    $user->pinjaman_id = null;
-                    $user->is_kelompok = false;
-                    $user->bmpa = (float)$user->bmpa + 500000; 
-                    $user->save();
+                $userIds = Pinjaman::find($cicilan->pinjaman_id)->list_anggota;
+
+                foreach ($userIds as $userIdData) {
+                    $userId = $userIdData['user_id'];
+                    $user = User::find($userId);
+
+                    if ($user) {
+                        $user->pinjaman_id = null;
+                        $user->is_kelompok = false;
+                        //$user->bmpa = (float)$user->bmpa + 500000; 
+                        $user->save();
+                    }
                 }
-                
-            }
             }
         }
     }
