@@ -28,7 +28,7 @@ class LaporanBulananCabangController extends Controller
         // alamat cabang
         $cabang_alamat = $cabang->lokasi;
         // jenis laporan
-        $jenis_laporan = $jenis;
+        $jenis_laporan = "Bulanan";
         // bulan laporan
         $months = [
             'January' => 'Januari',
