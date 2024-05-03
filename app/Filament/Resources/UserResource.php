@@ -94,14 +94,26 @@ class UserResource extends Resource
                             ]),
                         TextInput::make('no_hp')
                             ->label('Nomor HP')
-                            ->mask('9999 9999 9999 9999'),
+                            ->mask('9999 9999 9999 9999')
+                            ->dehydrateStateUsing(function ($state) {
+
+                                $phoneNumber = preg_replace('/\D/', '', $state);
+
+                                if (substr($phoneNumber, 0, 1) == '0') {
+                                    $phoneNumber = '62' . substr($phoneNumber, 1);
+                                } elseif (substr($phoneNumber, 0, 1) == '8') {
+                                    $phoneNumber = '62' . $phoneNumber;
+                                }
+
+                                return $phoneNumber;
+                            }),
                         TextInput::make('email')
                             ->email()
                             ->hidden(!($userAuthAdminAccess))
                             ->maxLength(255),
                         TextInput::make('nomor_ktp')
                             ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
-                            ->unique()
+                            ->unique(ignoreRecord: true)
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_ktp')
@@ -109,7 +121,7 @@ class UserResource extends Resource
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
                             ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
-                            ->unique()
+                            ->unique(ignoreRecord: true)
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
                         FileUpload::make('file_kk')
@@ -226,6 +238,7 @@ class UserResource extends Resource
                 TextColumn::make('no_hp')
                     ->label('Nomor HP')
                     ->icon('heroicon-m-phone')
+                    ->url(fn ($state) => ($state ? "https://wa.me/".$state : ""), true)
                     ->searchable(),
                 TextColumn::make('nomor_ktp')
                     ->label('Nomor KTP')
