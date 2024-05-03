@@ -52,13 +52,13 @@ class LaporanBulananCabangController extends Controller
                 Carbon::now()->endOfMonth()
             ])->where('cabang_id', $cabang_id)->sum('nominal');
         // infak umum
-        $infak_umum = config('bwi.persentase_saldo_umum') * $infak;
+        $infak_umum = config('bwi.persentase_saldo_umum') * $infak / 100;
         // infak keamilan
-        $infak_keamilan = config('bwi.persentase_saldo_keamilan') * $infak;
+        $infak_keamilan = config('bwi.persentase_saldo_keamilan') * $infak / 100;
         // infak sosial
-        $infak_sosial = config('bwi.persentase_saldo_csr') * $infak;
+        $infak_sosial = config('bwi.persentase_saldo_csr') * $infak / 100;
         // infak cadangan
-        $infak_cadangan = config('bwi.persentase_saldo_cadangan') * $infak;
+        $infak_cadangan = config('bwi.persentase_saldo_cadangan') * $infak / 100;
         // total infak
         $infak_total = $infak;
         // total cicilan
