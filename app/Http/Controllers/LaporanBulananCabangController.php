@@ -48,17 +48,17 @@ class LaporanBulananCabangController extends Controller
         // 
         // LAPORAN SELISIH (laba-rugi)
         $infak = Infak::whereBetween('created_at', [
-            Carbon::now()->subMonth()->startOfMonth(),
-            Carbon::now()->subMonth()->endOfMonth()
-        ])->sum('nominal');
+                Carbon::now()->subMonth()->startOfMonth(),
+                Carbon::now()->subMonth()->endOfMonth()
+            ])->where('cabang_id', $cabang_id)->sum('nominal');
         // infak umum
-        $infak_umum = config('bwi.persentase_saldo_umum')*$infak;
+        $infak_umum = config('bwi.persentase_saldo_umum') * $infak;
         // infak keamilan
-        $infak_keamilan = config('bwi.persentase_saldo_keamilan')*$infak;
+        $infak_keamilan = config('bwi.persentase_saldo_keamilan') * $infak;
         // infak sosial
-        $infak_sosial = config('bwi.persentase_saldo_csr')*$infak;
+        $infak_sosial = config('bwi.persentase_saldo_csr') * $infak;
         // infak cadangan
-        $infak_cadangan = config('bwi.persentase_saldo_cadangan')*$infak;
+        $infak_cadangan = config('bwi.persentase_saldo_cadangan') * $infak;
         // total infak
         $infak_total = $infak;
         // total cicilan
@@ -75,7 +75,7 @@ class LaporanBulananCabangController extends Controller
         $pengeluaran = Pengeluaran::whereBetween('tanggal', [
             Carbon::now()->subMonth()->startOfMonth(),
             Carbon::now()->subMonth()->endOfMonth()
-        ]);
+        ])->where('cabang_id', $cabang_id);
         // pengeluaran keamilan
         $pengeluaran_keamilan = $pengeluaran->where('jenis', 'Keamilan')->sum('nominal');
         // pengeluaran sosial
@@ -100,7 +100,7 @@ class LaporanBulananCabangController extends Controller
         ]);
         $mutasi_first =  $mutasi->oldest()->first();
         $mutasi_last = $mutasi->latest()->first();
-        dd($mutasi_first);
+
         // saldo umum
         $saldo_umum = $mutasi_last->saldo_umum ?? 0;
         // saldo keamilan
@@ -114,7 +114,7 @@ class LaporanBulananCabangController extends Controller
         $pinjaman_berjalan = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', false)->sum('total_pinjaman');
         $cicilan_berjalan = 0;
         foreach ($pinjaman_berjalan_aktif as $key => $value) {
-            $cicilan_berjalan_aktif = Cicilan::where('pinjaman_id', $value->id)->where('status_cicilan', true)->sum('nominal_cicilan');
+            $cicilan_berjalan_aktif = Cicilan::where('cabang_id', $cabang_id)->where('pinjaman_id', $value->id)->where('status_cicilan', true)->sum('nominal_cicilan');
             $cicilan_berjalan += $cicilan_berjalan_aktif;
         }
         $piutang = $pinjaman_berjalan - $cicilan_berjalan;
@@ -136,7 +136,7 @@ class LaporanBulananCabangController extends Controller
         // posisi akhir
         $saldo_akhir = $saldo_awal + $selisih;
         // 
-        
+
         $data = [
             'cabang_nama' => $cabang_nama,
             'cabang_alamat' => $cabang_alamat,
@@ -169,7 +169,7 @@ class LaporanBulananCabangController extends Controller
             'total_pinjaman' => number_format($total_pinjaman, 2, ",", "."),
             'saldo_awal' => number_format($saldo_awal, 2, ",", "."),
             'saldo_akhir' => number_format($saldo_akhir, 2, ",", "."),
-        ]; 
+        ];
 
         $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang', $data);
         return $pdf->stream(); //download('invoice.pdf');
