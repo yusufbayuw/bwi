@@ -79,7 +79,7 @@ class InfakObserver
             Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'infak_id' => $infak_id,
-                'kredit' => $dana_csr_akhir,
+                'kredit' => $dana_cadangan_akhir,
                 'saldo_umum' => $mutasi_2,
                 'saldo_keamilan' => $mutasi_4,
                 'saldo_csr' => $mutasi_6,

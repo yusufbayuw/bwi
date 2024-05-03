@@ -62,9 +62,9 @@ class PinjamanResource extends Resource
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            return parent::getEloquentQuery();
+            return parent::getEloquentQuery()->orderBy('id', 'DESC');
         } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id)->orderBy('id', 'DESC');
         }
     }
 

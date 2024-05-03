@@ -28,7 +28,7 @@ class StatsOverview extends BaseWidget
         } else {
             $userAuthCabang = $userAuth->cabang_id;
     
-            $saldo = Mutasi::where('cabang_id', $userAuthCabang)->latest()->first();
+            $saldo = Mutasi::where('cabang_id', $userAuthCabang)->orderBy('id', 'DESC')->first();
             $saldoUmum = $saldo->saldo_umum;
             $saldoKeamilan = $saldo->saldo_keamilan;
             $saldoCSR = $saldo->saldo_csr;

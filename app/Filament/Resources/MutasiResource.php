@@ -30,9 +30,9 @@ class MutasiResource extends Resource
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            return parent::getEloquentQuery();
+            return parent::getEloquentQuery()->orderBy('id', 'DESC');
         } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id)->orderBy('id', 'DESC');
         }
     }
 
@@ -163,8 +163,7 @@ class MutasiResource extends Resource
             //])
             ->emptyStateActions([
                 //Tables\Actions\CreateAction::make(),
-            ])
-            ->defaultSort('created_at', 'desc');
+            ]);
     }
     
     public static function getRelations(): array

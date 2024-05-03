@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
+use Filament\Forms\Components\FileUpload;
 
 class InfakResource extends Resource
 {
@@ -37,9 +38,9 @@ class InfakResource extends Resource
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            return parent::getEloquentQuery();
+            return parent::getEloquentQuery()->orderBy('id', 'DESC');
         } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id)->orderBy('id', 'DESC');
         }
     }
 
@@ -81,7 +82,8 @@ class InfakResource extends Resource
                         "Cash Tunai" => "Cash Tunai",
                         "Transfer Bank" => "Transfer Bank",
                     ])->default("Cash Tunai"),
-                DatePicker::make('tanggal')->maxDate(now()),
+                DatePicker::make('tanggal')->maxDate(now())->hint('Maksimal hari ini'),
+                FileUpload::make('berkas'),
             ]);
     }
 
