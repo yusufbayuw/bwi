@@ -147,7 +147,8 @@ class PinjamanResource extends Resource
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                 $number_total = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $get('nominal_pinjaman')))) / (float)$state;
                                 $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
-                            }),
+                            })
+                            ->required(),
                         TextInput::make('total_pinjaman')
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
