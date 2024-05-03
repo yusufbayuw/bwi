@@ -48,8 +48,8 @@ class LaporanBulananCabangController extends Controller
         // 
         // LAPORAN SELISIH (laba-rugi)
         $infak = Infak::whereBetween('created_at', [
-                Carbon::now()->subMonth()->startOfMonth(),
-                Carbon::now()->subMonth()->endOfMonth()
+                Carbon::now()->startOfMonth(), //Carbon::now()->startOfMonth()
+                Carbon::now()->endOfMonth()
             ])->where('cabang_id', $cabang_id)->sum('nominal');
         // infak umum
         $infak_umum = config('bwi.persentase_saldo_umum') * $infak;
@@ -63,18 +63,18 @@ class LaporanBulananCabangController extends Controller
         $infak_total = $infak;
         // total cicilan
         $cicilan = Cicilan::whereBetween('tanggal_bayar', [
-            Carbon::now()->subMonth()->startOfMonth(),
-            Carbon::now()->subMonth()->endOfMonth()
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth()
         ])->where('cabang_id', $cabang_id)->where('status_cicilan', true)->sum('nominal_cicilan');
         // total pinjaman
         $pinjaman = Pinjaman::whereBetween('updated_at', [
-            Carbon::now()->subMonth()->startOfMonth(),
-            Carbon::now()->subMonth()->endOfMonth()
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth()
         ])->where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->sum('total_pinjaman');
         // pengeluaran
         $pengeluaran = Pengeluaran::whereBetween('tanggal', [
-            Carbon::now()->subMonth()->startOfMonth(),
-            Carbon::now()->subMonth()->endOfMonth()
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth()
         ])->where('cabang_id', $cabang_id);
         // pengeluaran keamilan
         $pengeluaran_keamilan = $pengeluaran->where('jenis', 'Keamilan')->sum('nominal');
@@ -96,7 +96,7 @@ class LaporanBulananCabangController extends Controller
         // laporan posisi keuangan
         $mutasi = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
             Carbon::now()->subMonth(10)->startOfMonth(),
-            Carbon::now()->subMonth()->endOfMonth()
+            Carbon::now()->endOfMonth()
         ]);
         $mutasi_first =  $mutasi->oldest()->first();
         $mutasi_last = $mutasi->latest()->first();
