@@ -95,12 +95,12 @@ class LaporanBulananCabangController extends Controller
 
         // laporan posisi keuangan
         $mutasi = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
-            Carbon::now()->subMonth(10)->startOfMonth(),
+            Carbon::now()->startOfMonth(),
             Carbon::now()->endOfMonth()
         ]);
         $mutasi_first =  $mutasi->oldest()->first();
         $mutasi_last = $mutasi->latest()->first();
-
+        dd($mutasi_last);
         // saldo umum
         $saldo_umum = $mutasi_last->saldo_umum ?? 0;
         // saldo keamilan
