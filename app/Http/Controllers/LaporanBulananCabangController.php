@@ -72,18 +72,24 @@ class LaporanBulananCabangController extends Controller
             Carbon::now()->endOfMonth()
         ])->where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->sum('total_pinjaman');
         // pengeluaran
-        $pengeluaran = Pengeluaran::whereBetween('tanggal', [
+        
+        // pengeluaran keamilan
+        $pengeluaran_keamilan = Pengeluaran::whereBetween('tanggal', [
             Carbon::now()->startOfMonth(),
             Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id);
-        // pengeluaran keamilan
-        $pengeluaran_keamilan = $pengeluaran->where('jenis', 'Keamilan')->sum('nominal');
+        ])->where('cabang_id', $cabang_id)->where('jenis', 'Keamilan')->sum('nominal');
         // pengeluaran sosial
-        $pengeluaran_sosial = $pengeluaran->where('jenis', 'CSR')->sum('nominal');
+        $pengeluaran_sosial = Pengeluaran::whereBetween('tanggal', [
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth()
+        ])->where('cabang_id', $cabang_id)->where('jenis', 'CSR')->sum('nominal');
         // pengeluaran gagal bayar
-        $pengeluaran_cadangan = $pengeluaran->where('jenis', 'Cadangan')->sum('nominal');
+        $pengeluaran_cadangan = Pengeluaran::whereBetween('tanggal', [
+            Carbon::now()->startOfMonth(),
+            Carbon::now()->endOfMonth()
+        ])->where('cabang_id', $cabang_id)->where('jenis', 'Cadangan')->sum('nominal');
         // total pengeluaran
-        $total_pengeluaran = $pengeluaran->sum('nominal');
+        $total_pengeluaran = $pengeluaran_keamilan + $pengeluaran_cadangan + $pengeluaran_sosial;
         // total pendapatan
         $total_pendapatan = $infak_total + $cicilan;
         // total beban

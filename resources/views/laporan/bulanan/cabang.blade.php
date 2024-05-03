@@ -96,30 +96,30 @@
                       </tr>
                       <tr>
                           <td>Infaq Umum</td>
-                          <td>{{ $infak_umum }}</td>
+                          <td style="text-align: right;">{{ $infak_umum }}</td>
                       </tr>
                       <tr>
                           <td>Infaq Keamilan</td>
-                          <td>{{ $infak_keamilan }}</td>
+                          <td style="text-align: right;">{{ $infak_keamilan }}</td>
                       </tr>
                       <tr>
                           <td>Infaq Sosial</td>
-                          <td>{{ $infak_sosial }}</td>
+                          <td style="text-align: right;">{{ $infak_sosial }}</td>
                       </tr>
                       <tr>
                           <td>Infaq Cadangan</td>
-                          <td>{{ $infak_cadangan }}</td>
+                          <td style="text-align: right;">{{ $infak_cadangan }}</td>
                       </tr>
                       <tr>
                           <td>Total Infaq</td>
-                          <td>{{ $total_infak }}</td>
+                          <td style="text-align: right;">{{ $total_infak }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bold;">Cicilan</td>
                       </tr>
                       <tr>
                           <td>Total Cicilan</td>
-                          <td>{{ $cicilan }}</td>
+                          <td style="text-align: right;">{{ $cicilan }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">BEBAN</td>
@@ -129,41 +129,41 @@
                       </tr>
                       <tr>
                           <td>Total Pinjaman</td>
-                          <td>{{ $pinjaman }}</td>
+                          <td style="text-align: right;">{{ $pinjaman }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bold;">Pengeluaran</td>
                       </tr>
                       <tr>
                           <td>Pengeluaran Keamilan</td>
-                          <td>{{ $pengeluaran_keamilan }}</td>
+                          <td style="text-align: right;">{{ $pengeluaran_keamilan }}</td>
                       </tr>
                       <tr>
                           <td>Pengeluaran Sosial</td>
-                          <td>{{ $pengeluaran_sosial }}</td>
+                          <td style="text-align: right;">{{ $pengeluaran_sosial }}</td>
                       </tr>
                       <tr>
                           <td>Pengeluaran Gagal Bayar</td>
-                          <td>{{ $pengeluaran_cadangan }}</td>
+                          <td style="text-align: right;">{{ $pengeluaran_cadangan }}</td>
                       </tr>
                       <tr>
                           <td>Total Pengeluaran</td>
-                          <td>{{ $total_pengeluaran }}</td>
+                          <td style="text-align: right;">{{ $total_pengeluaran }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">SELISIH</td>
                       </tr>
                       <tr>
                           <td>Total Pendapatan</td>
-                          <td>{{ $total_pendapatan }}</td>
+                          <td style="text-align: right;">{{ $total_pendapatan }}</td>
                       </tr>
                       <tr>
                           <td>Total Beban</td>
-                          <td>{{ $total_beban }}</td>
+                          <td style="text-align: right;">{{ $total_beban }}</td>
                       </tr>
                       <tr>
                           <td>Selisih</td>
-                          <td>{{ $selisih }}</td>
+                          <td style="text-align: right;">{{ $selisih }}</td>
                       </tr>
                       <tr>
                           <td colspan="2">{{ $keterangan }}</td>
@@ -186,45 +186,45 @@
                       </tr>
                       <tr>
                           <td>Total Infaq</td>
-                          <td>{{$total_infak}}</td>
+                          <td style="text-align: right;">{{$total_infak}}</td>
                       </tr>
                       <tr>
                           <td>Total Cicilan</td>
-                          <td>{{ $total_cicilan }}</td>
+                          <td style="text-align: right;">{{ $total_cicilan }}</td>
                       </tr>
                       <tr>
                           <td>Total Pendapatan</td>
-                          <td>{{ $total_pendapatan }}</td>
+                          <td style="text-align: right;">{{ $total_pendapatan }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">BEBAN</td>
                       </tr>
                       <tr>
                           <td>Total Pinjaman</td>
-                          <td>{{ $total_pinjaman }}</td>
+                          <td style="text-align: right;">{{ $total_pinjaman }}</td>
                       </tr>
                       <tr>
                           <td>Total Pengeluaran</td>
-                          <td>{{ $total_pengeluaran }}</td>
+                          <td style="text-align: right;">{{ $total_pengeluaran }}</td>
                       </tr>
                       <tr>
                           <td>Total Beban</td>
-                          <td>{{ $total_beban }}</td>
+                          <td style="text-align: right;">{{ $total_beban }}</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS KAS</td>
                       </tr>
                       <tr>
                           <td>Posisi Awal</td>
-                          <td>{{ $saldo_awal }}</td>
+                          <td style="text-align: right;">{{ $saldo_awal }}</td>
                       </tr>
                       <tr>
                           <td>Selisih</td>
-                          <td>{{ $selisih }}</td>
+                          <td style="text-align: right;">{{ $selisih }}</td>
                       </tr>
                       <tr>
                           <td>Posisi Akhir</td>
-                          <td>{{ $saldo_akhir }}</td>
+                          <td style="text-align: right;">{{ $saldo_akhir }}</td>
                       </tr>
                   </table>
               </div>
@@ -245,27 +245,27 @@
                       </tr>
                       <tr>
                           <td>Saldo Umum</td>
-                          <td>{{ $saldo_umum }}</td>
+                          <td style="text-align: right;">{{ $saldo_umum }}</td>
                       </tr>
                       <tr>
                           <td>Saldo Keamilan</td>
-                          <td>{{ $saldo_keamilan }}</td>
+                          <td style="text-align: right;">{{ $saldo_keamilan }}</td>
                       </tr>
                       <tr>
                           <td>Saldo Sosial</td>
-                          <td>{{$saldo_sosial}}</td>
+                          <td style="text-align: right;">{{$saldo_sosial}}</td>
                       </tr>
                       <tr>
                           <td>Saldo Cadangan</td>
-                          <td>{{ $saldo_cadangan }}</td>
+                          <td style="text-align: right;">{{ $saldo_cadangan }}</td>
                       </tr>
                       <tr>
                           <td>Hutang Anggota</td>
-                          <td>{{ $piutang }}</td>
+                          <td style="text-align: right;">{{ $piutang }}</td>
                       </tr>
                       <tr>
                           <td>Total Asset</td>
-                          <td>{{ $total_asset }}</td>
+                          <td style="text-align: right;">{{ $total_asset }}</td>
                       </tr>
                   </table>
               </div>
