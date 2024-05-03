@@ -98,7 +98,7 @@ class LaporanBulananCabangController extends Controller
             Carbon::now()->startOfMonth(),
             Carbon::now()->endOfMonth()
         ])->orderBy('id', 'DESC')->first();
-        $mutasi_last = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
+        $mutasi_first = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
             Carbon::now()->startOfMonth(),
             Carbon::now()->endOfMonth()
         ])->orderBy('id', 'ASC')->first();
