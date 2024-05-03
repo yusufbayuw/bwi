@@ -100,7 +100,7 @@ class LaporanBulananCabangController extends Controller
         ]);
         $mutasi_first =  $mutasi->oldest()->first();
         $mutasi_last = $mutasi->latest()->first();
-        dd($mutasi_last);
+        dd($mutasi_last->saldo_umum);
         // saldo umum
         $saldo_umum = $mutasi_last->saldo_umum ?? 0;
         // saldo keamilan
