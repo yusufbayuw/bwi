@@ -46,9 +46,10 @@ class BerkasResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('file')
+                Tables\Columns\TextColumn::make('file')
                     ->label('Berkas')
-                    ->simpleLightbox(),
+                    ->formatStateUsing(fn ($state) => (explode('.', $state)[1] ?? 'file'))
+                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
