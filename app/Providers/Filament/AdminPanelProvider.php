@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('bwi')
-            ->path('bwi')
+            ->path('')
             ->login()
             ->darkMode(false)
             ->brandName('BWI-ITB')

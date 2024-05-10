@@ -15,7 +15,7 @@ use App\Http\Controllers\LaporanBulananCabangController;
 |
 */
 
-Route::get('/', function (Request $request) {
+/* Route::get('/', function (Request $request) {
     if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
         $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_X_FORWARDED_FOR"];
     }
@@ -34,7 +34,7 @@ Route::get('/', function (Request $request) {
     } else {
         return '<p>' . $userIP . '</p>'; //redirect('/bwi');
     }
-});
+}); */
 Route::get('/privacy-policy', function () {
     return view('privacy');
 });
