@@ -142,7 +142,7 @@ class CabangResource extends Resource
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
-                    ),
+                    )->alignRight(),
                 Tables\Columns\ImageColumn::make('berkas')->simpleLightbox(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
