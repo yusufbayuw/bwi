@@ -133,7 +133,8 @@ class CabangResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lokasi')
-                    ->searchable(),
+                    ->searchable()
+                    ->limit(20),
                 Tables\Columns\TextColumn::make('saldo_awal')
                     ->searchable()
                     ->sortable()
