@@ -27,6 +27,11 @@ use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section as ComponentsSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\Layout\Panel;
 use Filament\Tables\Columns\Layout\Split;
@@ -238,7 +243,7 @@ class UserResource extends Resource
                 TextColumn::make('no_hp')
                     ->label('Nomor HP')
                     ->icon('heroicon-m-phone')
-                    ->url(fn ($state) => ($state ? "https://wa.me/".$state : ""), true)
+                    ->url(fn ($state) => ($state ? "https://wa.me/" . $state : ""), true)
                     ->searchable(),
                 TextColumn::make('nomor_ktp')
                     ->label('Nomor KTP')
@@ -293,6 +298,84 @@ class UserResource extends Resource
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        $userAuth = auth()->user();
+        $adminAccess = config('bwi.adminAccess');
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
+        return $infolist
+            ->schema([
+                ComponentsSection::make('IDENTITAS')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        Fieldset::make('Data Diri')
+                            ->schema([
+                                TextEntry::make('name')
+                                    ->label('Nama'),
+                                TextEntry::make('no_hp')
+                                    ->label('Nomor HP')
+                                    ->icon('heroicon-m-phone')
+                                    ->url(fn ($state) => ($state ? "https://wa.me/" . $state : ""), true),
+
+                                TextEntry::make('email')
+                                    ->icon('heroicon-m-envelope')
+                                    ->hidden(!($userAuthAdminAccess)),
+                                TextEntry::make('username')
+                                    ->hidden(!($userAuthAdminAccess)),
+                                TextEntry::make('alamat')->columnSpanFull(),
+
+                            ]),
+                        Fieldset::make('Berkas')
+                            ->schema([
+                                TextEntry::make('nomor_ktp')
+                                    ->label('Nomor KTP')
+                                    ->icon('heroicon-m-identification'),
+                                ImageEntry::make('file_ktp')
+                                    ->label('Berkas KTP')
+                                    ->simpleLightbox(),
+                                TextEntry::make('nomor_kk')
+                                    ->label('Nomor KK'),
+                                ImageEntry::make('file_kk')
+                                    ->label('Berkas KK')
+                                    ->simpleLightbox(),
+                            ]),
+                        Fieldset::make('Pendapatan')
+                            ->schema([
+                                TextEntry::make('pekerjaan'),
+                                TextEntry::make('penghasilan_bulanan')
+                                    ->label('Pendapatan')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                            ])
+                    ]),
+                ComponentsSection::make('ORGANISASI')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('cabangs.nama_cabang')
+                            ->icon('heroicon-m-building-office')
+                            ->label('Nama Cabang')
+                            ->hidden(!($userAuthAdminAccess)),
+                        TextEntry::make('pinjamans.nama_kelompok')
+                            ->icon('heroicon-m-user-group')
+                            ->label('Nama Kelompok'),
+                        TextEntry::make('roles.name')
+                            ->label('Jabatan')
+                            ->badge(),
+                        TextEntry::make('bmpa')
+                            ->label('Nilai BMPA')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                    ]),
             ]);
     }
 

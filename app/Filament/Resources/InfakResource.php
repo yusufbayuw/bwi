@@ -22,6 +22,10 @@ use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
 use Filament\Forms\Components\FileUpload;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class InfakResource extends Resource
 {
@@ -137,6 +141,42 @@ class InfakResource extends Resource
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('INFAQ')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('cabangs.nama_cabang')
+                            ->label('Cabang:')
+                            ->hidden(!auth()->user()->hasRole(config('bwi.adminAccess'))),
+                        TextEntry::make('jenis')
+                            ->label('Sumber Infaq:')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                'Kotak Infaq' => 'success',
+                                'Anggota' => 'warning',
+                                'Donatur' => 'danger',
+                            }),
+                        TextEntry::make('users.name')
+                            ->label('Pemberi Infaq:'),
+                        TextEntry::make('nominal')
+                            ->label('Nominal:')
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                        TextEntry::make('metode')
+                            ->label('Jenis Pembayaran:'),
+                        TextEntry::make('tanggal')
+                            ->label('Tanggal Pembayaran:')
+                            ->date(),
+                        ImageEntry::make('berkas'),
+                    ]),
             ]);
     }
 

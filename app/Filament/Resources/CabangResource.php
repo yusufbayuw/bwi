@@ -21,6 +21,12 @@ use App\Filament\Resources\CabangResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CabangResource\RelationManagers;
 use Filament\Forms\Components\FileUpload;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\Section as ComponentsSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class CabangResource extends Resource
 {
@@ -43,7 +49,7 @@ class CabangResource extends Resource
                 ->isActiveWhen(fn () => request()->routeIs(static::getRouteBaseName() . '.*'))
                 ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
                 ->sort(static::getNavigationSort())
-                ->url((!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? static::getNavigationUrl() : static::getNavigationUrl()."/".Auth::user()->cabang_id),
+                ->url((!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? static::getNavigationUrl() : static::getNavigationUrl() . "/" . Auth::user()->cabang_id),
         ];
     }
 
@@ -104,7 +110,7 @@ class CabangResource extends Resource
                                     ->searchable(),
                             ]),
                         Select::make('ketua_pengurus')
-                            ->label('Ketua Pengurus')
+                            ->label('Ketua Pengelola')
                             ->options(fn (Cabang $cabang) => User::where('cabang_id', $cabang->id)->orderBy('name')->pluck('name', 'id'))
                             ->searchable(),
                         Repeater::make('sekretaris')
@@ -169,21 +175,94 @@ class CabangResource extends Resource
                 Tables\Actions\CreateAction::make(),
             ]);
     }
-    
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                ComponentsSection::make('CABANG')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('nama_cabang')
+                            ->label('Nama Cabang'),
+                        TextEntry::make('saldo_awal')
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.'))
+                            ->badge(),
+                        TextEntry::make('lokasi')
+                            ->label('Alamat/Lokasi')
+                            ->columnSpanFull(),
+                        ImageEntry::make('berkas')
+                            ->simpleLightbox(),
+                    ]),
+                ComponentsSection::make('KEPENGURUSAN')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        Fieldset::make('PEMBINA')
+                            ->schema([
+                                TextEntry::make('ketua_pembina')
+                                    ->label('Ketua Pembina:')
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                RepeatableEntry::make('anggota_pembina')
+                                    ->label('Anggota Pembina:')
+                                    ->schema([
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ])
+                                    ->contained(false),
+                            ]),
+                        Fieldset::make('PENGAWAS')
+                            ->schema([
+                                TextEntry::make('ketua_pengawas')
+                                    ->label('Ketua Pengawas:')
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                RepeatableEntry::make('anggota_pengawas')
+                                    ->label('Anggota Pengawas:')
+                                    ->schema([
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ])
+                                    ->contained(false),
+                            ]),
+                        Fieldset::make('PENGELOLA')
+                            ->schema([
+                                TextEntry::make('ketua_pengurus')
+                                    ->label('Ketua Pengelola:')
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                RepeatableEntry::make('sekretaris')
+                                    ->label('Sekretaris:')
+                                    ->schema([
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ])
+                                    ->contained(false),
+                                RepeatableEntry::make('bendahara')
+                                    ->label('Bendahara:')
+                                    ->schema([
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ])
+                                    ->contained(false),
+                            ]),
+                    ]),
+            ]);
+    }
+
     public static function getRelations(): array
     {
         return [
             //
         ];
     }
-    
+
     public static function getPages(): array
     {
         return [
-            'index' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ListCabangs::route('/') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
+            'index' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ListCabangs::route('/') : Pages\ViewCabang::route('/' . Auth::user()->cabang_id),
             'create' => Pages\CreateCabang::route('/create'),
-            'view' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ViewCabang::route('/{record}') : Pages\ViewCabang::route('/'.Auth::user()->cabang_id),
+            'view' => (!Auth::check() || Auth::user()->hasRole(config('bwi.adminAccessSuper'))) ? Pages\ViewCabang::route('/{record}') : Pages\ViewCabang::route('/' . Auth::user()->cabang_id),
             'edit' => Pages\EditCabang::route('/{record}/edit'),
         ];
-    }    
+    }
 }
