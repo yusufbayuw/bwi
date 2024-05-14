@@ -16,11 +16,13 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\PinjamanResource;
+use App\Models\Mutasi;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
 
@@ -34,9 +36,7 @@ class CreatePinjaman extends CreateRecord
 
     protected function getFormActions(): array
     {
-        return [
-            
-        ];
+        return [];
     }
 
     protected function getRedirectUrl(): string
@@ -75,7 +75,7 @@ class CreatePinjaman extends CreateRecord
                         ->schema(
                             fn (Get $get): array => match ($get('jumlah_anggota')) {
                                 '5' => [
-                                    PinjamanResource::getItemsRepeater()
+                                    PinjamanResource::getItemsRepeaterCreate()
                                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
                                             $totalBmpa = 9999999999;
                                             foreach ($state as $key => $item) {
@@ -194,10 +194,25 @@ class CreatePinjaman extends CreateRecord
                                         $nilai = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $value));
                                         $nominal_bmpa_max = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $get('nominal_bmpa_max')));
                                         if ($nilai > $nominal_bmpa_max) {
+                                            Notification::make()
+                                                ->title("Nilai pinjaman terlalu besar, maksimal adalah " . $get('nominal_bmpa_max'))
+                                                ->danger()
+                                                ->send();
                                             $fail("Nilai pinjaman terlalu besar, maksimal adalah " . $get('nominal_bmpa_max'));
                                         }
                                     },
-            
+                                    fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get, $userAuthAdminAccess) {
+                                        $nilai = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $value)) * $get('jumlah_anggota');
+                                        $saldo_pinjaman = Mutasi::where('cabang_id',$get('cabang_id'))->orderBy('id', 'desc')->first()->saldo_umum;
+                                        if ($nilai > $saldo_pinjaman) {
+                                            Notification::make()
+                                                ->title("Total pinjaman terlalu besar (" . number_format($nilai, 2, ',', '.') . "), maksimal adalah " . number_format($saldo_pinjaman, 2, ',', '.'))
+                                                ->danger()
+                                                ->send();
+                                            $fail("Total pinjaman terlalu besar (" . number_format($nilai, 2, ',', '.') . "), maksimal adalah " . number_format($saldo_pinjaman, 2, ',', '.'));
+                                        }
+                                    },
+
                                 ]),
                             /* Stepper::make('lama_cicilan')
                                 ->label('Lama Cicilan (minggu)')
@@ -243,7 +258,7 @@ class CreatePinjaman extends CreateRecord
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
                                 ->hint(fn (Get $get, $state) => '@ ' . str_replace(",", ".", number_format((float)str_replace(".", ",", preg_replace('/[^0-9,]/', '', $state)) / ((int)$get('jumlah_anggota') === 0 ? 1 : (int)$get('jumlah_anggota'))))),
                             Hidden::make('status')
-                                /* ->options([
+                            /* ->options([
                                     'Pembuatan Kelompok' => 'Pembuatan Kelompok',
                                     'Menunggu Verifikasi' => 'Menunggu Verifikasi',
                                     'Cicilan Berjalan' => 'Cicilan Berjalan',
@@ -269,8 +284,6 @@ class CreatePinjaman extends CreateRecord
                 </x-filament::button>
             BLADE)))
                     ->columnSpanFull(),
-            ])
-        ;
+            ]);
     }
-    
 }

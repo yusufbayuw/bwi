@@ -42,4 +42,6 @@ class StatsOverview extends BaseWidget
             Stat::make("Saldo CSR", number_format($saldoCSR, 2, ',', '.')),
         ];
     }
+
+    protected static bool $isLazy = false;
 }

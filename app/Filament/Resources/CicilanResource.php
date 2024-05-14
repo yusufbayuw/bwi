@@ -23,7 +23,11 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CicilanResource\RelationManagers;
+use App\Models\Pinjaman;
 use Filament\Forms\Components\Textarea;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class CicilanResource extends Resource
 {
@@ -53,12 +57,12 @@ class CicilanResource extends Resource
         $userAuth = auth()->user();
         $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-        
+
         return $form
             ->schema([
                 ($userAuthAdminAccess) ? Select::make('cabang_id')
                     ->label('Cabang')
-                    ->relationship('cabangs', 'nama_cabang') : 
+                    ->relationship('cabangs', 'nama_cabang') :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('pinjaman_id')
                     ->relationship('pinjamans', 'nama_kelompok')
@@ -106,7 +110,7 @@ class CicilanResource extends Resource
                     ->label('Tanggal Tagihan')
                     ->date()
                     ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
-                    ->sortable(),    
+                    ->sortable(),
                 TextColumn::make('nominal_cicilan')
                     ->searchable()
                     ->label('Nominal')
@@ -143,13 +147,56 @@ class CicilanResource extends Resource
                 //
             ])
             ->actions([
-                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 //Tables\Actions\BulkActionGroup::make([
-                    //Tables\Actions\DeleteBulkAction::make(),
+                //Tables\Actions\DeleteBulkAction::make(),
                 //]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        $userAuth = auth()->user();
+        $adminAccess = config('bwi.adminAccess');
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
+        return $infolist
+            ->schema([
+                Section::make('CICILAN')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('cabangs.nama_cabang')
+                            ->label('Cabang:')
+                            ->hidden(!$userAuthAdminAccess),
+                        TextEntry::make('pinjamans.nama_kelompok')
+                            ->label('Kelompok Pinjaman:'),
+                        TextEntry::make('nominal_cicilan')
+                            ->label('Nominal:')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                        TextEntry::make('tanggal_cicilan')
+                            ->label('Tanggal Tagihan:')
+                            ->badge()
+                            ->date(),
+                        TextEntry::make('tagihan_ke')
+                            ->label('Tagihan Ke:')
+                            ->formatStateUsing(fn ($state, Cicilan $cicilan) => $state.'/'.Pinjaman::find($cicilan->pinjaman_id)->lama_cicilan),
+                        TextEntry::make('status_cicilan')
+                            ->label('Status Cicilan:')
+                            ->formatStateUsing(fn ($state) => $state ? 'LUNAS' : 'Belum Lunas')
+                            ->badge()
+                            ->color(fn (string $state): string => match ($state) {
+                                '1' => 'success',
+                                '0' => 'danger',
+                            }),
+
+                    ]),
             ]);
     }
 
@@ -164,7 +211,7 @@ class CicilanResource extends Resource
     {
         return [
             'index' => Pages\ListCicilans::route('/'),
-            //'create' => Pages\CreateCicilan::route('/create'),
+            'create' => Pages\CreateCicilan::route('/create'),
             'view' => Pages\ViewCicilan::route('/{record}'),
             'edit' => Pages\EditCicilan::route('/{record}/edit'),
         ];

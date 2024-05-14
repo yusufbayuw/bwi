@@ -34,6 +34,11 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\Section as ComponentsSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class PinjamanResource extends Resource
 {
@@ -265,6 +270,81 @@ class PinjamanResource extends Resource
             ]);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        $userAuth = auth()->user();
+        $adminAccess = config('bwi.adminAccess');
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
+        return $infolist
+            ->schema([
+                ComponentsSection::make('KELOMPOK')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('cabangs.nama_cabang')
+                            ->label('Cabang:')
+                            ->hidden(!$userAuthAdminAccess),
+                        TextEntry::make('nama_kelompok')
+                            ->label('Nama Kelompok:'),
+                        TextEntry::make('jumlah_anggota')
+                            ->label('Jumlah Anggota:'),
+                        TextEntry::make('berkas'),
+                        Fieldset::make('daftar_anggota')
+                            ->label('Daftar Anggota & BMPA')
+                            ->schema([
+                                RepeatableEntry::make('list_anggota')
+                                    ->label('')
+                                    ->contained(false)
+                                    ->columns([
+                                        'sm' => 1,
+                                        'md' => 2,
+                                    ])
+                                    ->schema([
+                                        TextEntry::make('user_id')
+                                            ->formatStateUsing(fn ($state) => User::find($state)->name)
+                                            ->label(''),
+                                        TextEntry::make('bmpa')
+                                            ->badge()
+                                            ->label('')
+                                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                                    ])
+                            ])               
+                    ]),
+                ComponentsSection::make('CICILAN')
+                    ->columns([
+                        'sm' => 1,
+                        'md' => 2,
+                    ])
+                    ->schema([
+                        TextEntry::make('nominal_bmpa_max')
+                            ->label('Maksimum pinjaman/anggota:')
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                        TextEntry::make('nominal_pinjaman')
+                            ->label('Nominal Pinjaman/Anggota')
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                        TextEntry::make('total_pinjaman')
+                            ->label('Total Pinjaman Kelompok')
+                            ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                        TextEntry::make('lama_cicilan')
+                            ->label('Lama Cicilan (minggu):'),
+                        TextEntry::make('status')
+                            ->label('Status Pinjaman:')
+                            ->badge(),
+                        TextEntry::make('acc_pinjaman')
+                            ->label('Persetujuan Pinjaman:')
+                            ->badge()
+                            ->formatStateUsing(fn ($state) => $state ? 'DISETUJUI' : 'Belum/Tidak Disetujui')
+                            ->color(fn (string $state): string => match ($state) {
+                                '1' => 'success',
+                                '0' => 'danger',
+                            }),
+                    ]),
+            ]);
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -295,6 +375,61 @@ class PinjamanResource extends Resource
     }
 
     public static function getItemsRepeater(): Repeater
+    {
+        $userAuth = auth()->user();
+        $adminAccess = config('bwi.adminAccess');
+        $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+
+        if ($userAuthAdminAccess) {
+            $userOption = null;
+        } else {
+            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota');
+            //$userOptionUser = $userOption->where('is_organ', false);
+        }
+
+        return Repeater::make('list_anggota')
+            ->schema([
+                Select::make('user_id')
+                    ->label('Nama Anggota')
+                    ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
+                        if ($userAuthAdminAccess) {
+                            return User::where('cabang_id', ($get('../../cabang_id')))->where('is_kelompok', false)->orWhere('pinjaman_id', ($get('../../id')))->where('jenis_anggota', 'Anggota')->pluck('name', 'id');
+                        } else {
+                            /* if (config('bwi.pinjamanOrganisasi') && $get('../../is_organ'))
+                            {
+                                return $userOptionUser->pluck('name', 'id');
+                            } else {
+                                return $userOption->pluck('name', 'id');
+                            } */
+                            return $userOption->orWhere('pinjaman_id', ($get('../../id')))->pluck('name', 'id');
+                        }
+                    })
+                    ->afterStateUpdated(function (Set $set, $state) {
+                        $set('bmpa', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                        /* if (User::find($state)->is_organ ?? false) {
+                            $set('../../is_organ', true);
+                        } */
+                    })
+                    ->required()
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                TextInput::make('bmpa')
+                    ->label('BMPA')
+                    ->mask(RawJs::make(<<<'JS'
+                $money($input, ',', '.', 0)
+            JS))
+                    ->readOnly()
+                    ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                    ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+            ])
+            ->live(debounce: 500)
+            ->label('Daftar Anggota')
+            ->reorderableWithDragAndDrop(false)
+            ->deletable(false)
+            ->addable(false)
+            ->columns(2);
+    }
+
+    public static function getItemsRepeaterCreate(): Repeater
     {
         $userAuth = auth()->user();
         $adminAccess = config('bwi.adminAccess');

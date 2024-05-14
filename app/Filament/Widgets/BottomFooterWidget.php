@@ -22,6 +22,8 @@ class BottomFooterWidget extends Widget
         $pinjamanUrl = null;
         $cicilanUrl = null;
         $pengeluaranUrl = null;
+        $mutasiUrl = null;
+        $peranUrl = null;
 
         foreach ($navigation as $key => $nav) {
             $item =  $nav->getItems()->toArray();
@@ -41,9 +43,9 @@ class BottomFooterWidget extends Widget
                 } elseif ($label === 'Pengeluaran') {
                     $pengeluaranUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Mutasi') {
-                    $pengeluaranUrl = $navigationItem->getUrl();
+                    $mutasiUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Peran') {
-                    $pengeluaranUrl = $navigationItem->getUrl();
+                    $peranUrl = $navigationItem->getUrl();
                 } 
             }
         }

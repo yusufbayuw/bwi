@@ -242,8 +242,8 @@ class CabangResource extends Resource
                                     ->label('Bendahara:')
                                     ->schema([
                                         TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
-                                    ])
-                                    ->contained(false),
+                                    ])->contained(false)
+                                    ,
                             ]),
                     ]),
             ]);

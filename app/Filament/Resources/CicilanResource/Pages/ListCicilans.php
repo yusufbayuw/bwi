@@ -12,6 +12,8 @@ class ListCicilans extends ListRecords
 {
     protected static string $resource = CicilanResource::class;
 
+    protected static bool $isLazy = false;
+
     protected function getHeaderActions(): array
     {
         return [
