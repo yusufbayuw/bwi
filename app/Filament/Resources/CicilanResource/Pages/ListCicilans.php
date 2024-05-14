@@ -7,6 +7,8 @@ use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\CicilanResource;
 use App\Filament\Widgets\BottomFooterWidget;
 use EightyNine\ExcelImport\ExcelImportAction;
+use Filament\Resources\Components\Tab;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListCicilans extends ListRecords
 {
@@ -28,6 +30,16 @@ class ListCicilans extends ListRecords
     {
         return [
             BottomFooterWidget::class,
+        ];
+    }
+
+    public function getTabs(): array
+    {
+        return [
+            'lunas' => Tab::make('Belum Dibayar')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc')),
+            'tagihan' => Tab::make('Lunas')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status_cicilan', true)->orderBy('updated_at', 'desc')),
         ];
     }
 }

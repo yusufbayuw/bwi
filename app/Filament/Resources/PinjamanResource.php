@@ -34,6 +34,7 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 use App\Filament\Resources\PinjamanResource\RelationManagers;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section as ComponentsSection;
@@ -146,6 +147,7 @@ class PinjamanResource extends Resource
                             ->label('Lama Cicilan (minggu)')
                             ->minValue(5)
                             ->maxValue(50)
+                            ->hiddenOn('edit')
                             ->step(5)
                             ->default(5)
                             ->live(debounce: 1000)
@@ -154,6 +156,15 @@ class PinjamanResource extends Resource
                                 $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
                             })
                             ->required(),
+                        TextInput::make('lama_cicilan')
+                            ->mask(RawJs::make(<<<'JS'
+                                    $money($input, ',', '.', 2)
+                                JS))
+                            ->label("Lama Cicilan (minggu)")
+                            ->hiddenOn('create')
+                            ->readOnly()
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                            ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                         TextInput::make('total_pinjaman')
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
@@ -178,9 +189,26 @@ class PinjamanResource extends Resource
                                 'Sudah Lunas' => 'Sudah Lunas',
                             ])
                             ->default('Pembuatan Kelompok') */,
-                        Toggle::make('acc_pinjaman')
+                        /* Toggle::make('acc_pinjaman')
                             ->hidden(!($userAuth->hasRole($adminAccessApprove)))
                             ->afterStateUpdated(fn (Set $set) => $set('status', 'Cicilan Berjalan'))
+                            ->live(), */
+                        ToggleButtons::make('acc_pinjaman')
+                            ->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                            ->options([
+                                '1' => 'Setujui',
+                                '0' => 'Tolak',
+                            ])
+                            ->icons([
+                                '1' => 'heroicon-o-check',
+                                '0' => 'heroicon-o-x-mark',
+                            ])
+                            ->colors([
+                                '1' => 'success',
+                                '0' => 'success',
+                            ])
+                            ->inline()
+                            ->afterStateUpdated(fn (Set $set, $state) => $state ? $set('status', 'Cicilan Berjalan') : '')
                             ->live(),
                         DatePicker::make('tanggal_cicilan_pertama')
                             ->date('d/m/Y')
@@ -311,7 +339,7 @@ class PinjamanResource extends Resource
                                             ->label('')
                                             ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
                                     ])
-                            ])               
+                            ])
                     ]),
                 ComponentsSection::make('CICILAN')
                     ->columns([

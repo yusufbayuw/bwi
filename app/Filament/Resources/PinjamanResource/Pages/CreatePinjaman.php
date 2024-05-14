@@ -95,7 +95,7 @@ class CreatePinjaman extends CreateRecord
                                         ->minItems(5),
                                 ],
                                 '7' => [
-                                    PinjamanResource::getItemsRepeater()
+                                    PinjamanResource::getItemsRepeaterCreate()
                                         ->afterStateUpdated(function (Set $set, $state) {
                                             $totalBmpa = 9999999999;
                                             foreach ($state as $key => $item) {
@@ -115,7 +115,7 @@ class CreatePinjaman extends CreateRecord
                                         ->minItems(7),
                                 ],
                                 '9' => [
-                                    PinjamanResource::getItemsRepeater()
+                                    PinjamanResource::getItemsRepeaterCreate()
                                         ->afterStateUpdated(function (Set $set, $state) {
                                             $totalBmpa = 9999999999;
                                             foreach ($state as $key => $item) {
@@ -135,7 +135,7 @@ class CreatePinjaman extends CreateRecord
                                         ->minItems(9),
                                 ],
                                 '11' => [
-                                    PinjamanResource::getItemsRepeater()
+                                    PinjamanResource::getItemsRepeaterCreate()
                                         ->afterStateUpdated(function (Set $set, $state) {
                                             $totalBmpa = 9999999999;
                                             foreach ($state as $key => $item) {

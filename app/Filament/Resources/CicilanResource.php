@@ -25,9 +25,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CicilanResource\RelationManagers;
 use App\Models\Pinjaman;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 
 class CicilanResource extends Resource
 {
@@ -62,7 +66,7 @@ class CicilanResource extends Resource
             ->schema([
                 ($userAuthAdminAccess) ? Select::make('cabang_id')
                     ->label('Cabang')
-                    ->relationship('cabangs', 'nama_cabang') :
+                    ->relationship('cabangs', 'nama_cabang')->disabled() :
                     Hidden::make('cabang_id')->default($userAuth->cabang_id),
                 Select::make('pinjaman_id')
                     ->relationship('pinjamans', 'nama_kelompok')
@@ -85,13 +89,52 @@ class CicilanResource extends Resource
                     ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
                 Hidden::make('is_final')
                     ->disabled(),
-                Toggle::make('status_cicilan')
-                    ->label('Cicilan Telah Dibayar'),
+                ToggleButtons::make('status_cicilan')
+                    ->label('Status Pembayaran Cicilan')
+                    //->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                    ->options([
+                        '1' => 'SUDAH Dibayar',
+                        '0' => 'BELUM Dibayar',
+                    ])
+                    ->icons([
+                        '1' => 'heroicon-o-check',
+                        '0' => 'heroicon-o-x-mark',
+                    ])
+                    ->colors([
+                        '1' => 'success',
+                        '0' => 'success',
+                    ])
+                    ->afterStateUpdated(function (Get $get, Cicilan $cicilan, Set $set) {
+
+                        $pinjaman_id = $cicilan->pinjaman_id;
+                        $cicilan_sama_ids = Cicilan::where('pinjaman_id', $pinjaman_id)->pluck('status_cicilan','id')->toArray();
+                        
+                        if ($cicilan_sama_ids) {
+                            foreach ($cicilan_sama_ids as $id => $value) {
+                                // Jika nilai adalah 0 dan id kurang dari current_id
+                                if ($value == 0 && $id < $cicilan->id) {
+                                    Notification::make()
+                                        ->title('Bayar dulu cicilan ke-'.Cicilan::find($id)->tagihan_ke)
+                                        ->body('Ini adalah cicilan ke-'.$cicilan->tagihan_ke.'. Cicilan ke-'.Cicilan::find($id)->tagihan_ke.' belum dibayar.')
+                                        ->danger()
+                                        ->send();
+                                    $set('status_cicilan', false);
+                                    break;
+                                }
+                            }
+                        }
+                    })
+                    ->disableOptionWhen(fn (string $value): bool => $value == false)
+                    ->inline()
+                    ->live(),
                 DatePicker::make('tanggal_bayar')
-                    ->required(),
+                    ->required()
+                    ->hidden(fn (Get $get) => !$get('status_cicilan')),
                 Textarea::make('catatan')
-                    ->maxLength(255),
-                FileUpload::make('berkas'),
+                    ->maxLength(255)
+                    ->hidden(fn (Get $get) => !$get('status_cicilan')),
+                FileUpload::make('berkas')
+                ->hidden(fn (Get $get) => !$get('status_cicilan')),
             ]);
     }
 
