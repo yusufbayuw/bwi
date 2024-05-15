@@ -50,6 +50,9 @@ class CreatePinjaman extends CreateRecord
         $adminAccess = config('bwi.adminAccess');
         $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+        
+        $adminAccessCreatePinjaman = config('bwi.adminAccessCreatePinjaman');
+        $userAuthAdminAccessCreatePinjaman = $userAuth->hasRole($adminAccessCreatePinjaman);
 
         return $form
             ->schema([
@@ -64,6 +67,7 @@ class CreatePinjaman extends CreateRecord
                                 Hidden::make('cabang_id')->default($userAuth->cabang_id),
                             TextInput::make('nama_kelompok')
                                 ->required()
+                                ->disabled(!$userAuthAdminAccessCreatePinjaman)
                                 ->maxLength(255),
                             PinjamanResource::getSelectOption()
                                 ->afterStateUpdated(
@@ -209,7 +213,7 @@ class CreatePinjaman extends CreateRecord
                                                 ->title("Total pinjaman terlalu besar (" . number_format($nilai, 2, ',', '.') . "), maksimal adalah " . number_format($saldo_pinjaman, 2, ',', '.'))
                                                 ->danger()
                                                 ->send();
-                                            $fail("Total pinjaman terlalu besar (" . number_format($nilai, 2, ',', '.') . "), maksimal adalah " . number_format($saldo_pinjaman, 2, ',', '.'));
+                                            $fail("Saldo tidak cukup. Maksimal pinjaman adalah " . number_format($saldo_pinjaman/$get('jumlah_anggota'), 2, ',', '.').".");
                                         }
                                     },
 

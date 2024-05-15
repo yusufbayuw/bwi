@@ -46,7 +46,7 @@ class CicilanResource extends Resource
 
     protected static ?string $slug = 'cicilan';
 
-    public static function getEloquentQuery(): Builder
+    /* public static function getEloquentQuery(): Builder
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
@@ -54,7 +54,7 @@ class CicilanResource extends Resource
         } else {
             return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
         }
-    }
+    } */
 
     public static function form(Form $form): Form
     {

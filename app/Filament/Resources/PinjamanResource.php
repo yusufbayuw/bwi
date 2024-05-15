@@ -406,7 +406,10 @@ class PinjamanResource extends Resource
     {
         $userAuth = auth()->user();
         $adminAccess = config('bwi.adminAccess');
+        $adminAccessCreatePinjaman = config('bwi.adminAccessCreatePinjaman');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
+        $userAuthAdminAccessCreatePinjaman = $userAuth->hasRole($adminAccessCreatePinjaman);
+
 
         if ($userAuthAdminAccess) {
             $userOption = null;
@@ -439,7 +442,8 @@ class PinjamanResource extends Resource
                         } */
                     })
                     ->required()
-                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                    ->disableOptionWhen(fn (string $value): bool => $value != null),
+                    //->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                 TextInput::make('bmpa')
                     ->label('BMPA')
                     ->mask(RawJs::make(<<<'JS'

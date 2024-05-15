@@ -7,7 +7,7 @@ use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\CicilanResource;
 use App\Filament\Widgets\BottomFooterWidget;
 use EightyNine\ExcelImport\ExcelImportAction;
-use Filament\Resources\Components\Tab;
+use Filament\Resources\Pages\ListRecords\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListCicilans extends ListRecords
@@ -35,11 +35,12 @@ class ListCicilans extends ListRecords
 
     public function getTabs(): array
     {
+        $userAuth = auth()->user();
+        $adminAuth = $userAuth->hasRole(config('bwi.adminAccess'));
+        $cabang_id = $userAuth->cabang_id;
         return [
-            'lunas' => Tab::make('Belum Dibayar')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc')),
-            'tagihan' => Tab::make('Lunas')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status_cicilan', true)->orderBy('updated_at', 'desc')),
+            'Belum Dibayar' => Tab::make()->query(fn ($query) => $adminAuth ? $query->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc') : $query->where('cabang_id', $cabang_id)->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc') ),
+            'Lunas' => Tab::make()->query(fn ($query) => $adminAuth ? $query->where('status_cicilan', true)->orderBy('updated_at', 'desc') : $query->where('cabang_id', $cabang_id)->where('status_cicilan', true)->orderBy('updated_at', 'desc')),
         ];
     }
 }

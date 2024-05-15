@@ -49,7 +49,7 @@ class CicilanObserver
             if ($cicilan->is_final) {
                 $lunas = Pinjaman::find($cicilan->pinjaman_id);
                 $lunas->status = "Lunas";
-                $lunas->save();
+                $lunas->saveQuietly();
 
                 $userIds = Pinjaman::find($cicilan->pinjaman_id)->list_anggota;
 
@@ -60,7 +60,7 @@ class CicilanObserver
                     if ($user) {
                         $user->pinjaman_id = null;
                         $user->is_kelompok = false;
-                        //$user->bmpa = (float)$user->bmpa + 500000; 
+                        $user->bmpa = (float)$user->bmpa + 500000; 
                         $user->save();
                     }
                 }
