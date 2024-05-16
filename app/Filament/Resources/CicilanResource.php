@@ -104,7 +104,7 @@ class CicilanResource extends Resource
                         '1' => 'success',
                         '0' => 'success',
                     ])
-                    ->afterStateUpdated(function (Get $get, Cicilan $cicilan, Set $set) {
+                    ->afterStateUpdated(function ($state, Cicilan $cicilan, Set $set) {
 
                         $pinjaman_id = $cicilan->pinjaman_id;
                         $cicilan_sama_ids = Cicilan::where('pinjaman_id', $pinjaman_id)->pluck('status_cicilan','id')->toArray();
@@ -123,12 +123,18 @@ class CicilanResource extends Resource
                                 }
                             }
                         }
+
+                        if ($state) {
+                            $set('tanggal_bayar', now());
+                        }
                     })
                     ->disableOptionWhen(fn (string $value): bool => $value == false)
                     ->inline()
                     ->live(),
                 DatePicker::make('tanggal_bayar')
                     ->required()
+                    //->default(now())
+                    ->native(false)
                     ->hidden(fn (Get $get) => !$get('status_cicilan')),
                 Textarea::make('catatan')
                     ->maxLength(255)

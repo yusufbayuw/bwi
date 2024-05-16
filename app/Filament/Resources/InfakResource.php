@@ -86,7 +86,7 @@ class InfakResource extends Resource
                         "Cash Tunai" => "Cash Tunai",
                         "Transfer Bank" => "Transfer Bank",
                     ])->default("Cash Tunai"),
-                DatePicker::make('tanggal')->maxDate(now())->hint('Maksimal hari ini'),
+                DatePicker::make('tanggal')->default(now())->maxDate(now())->hint('Maksimal hari ini')->native(false),
                 FileUpload::make('berkas'),
             ]);
     }

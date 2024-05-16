@@ -163,7 +163,8 @@ class MutasiResource extends Resource
             //])
             ->emptyStateActions([
                 //Tables\Actions\CreateAction::make(),
-            ]);
+            ])
+            ->recordUrl(null);
     }
     
     public static function getRelations(): array

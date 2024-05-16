@@ -275,6 +275,7 @@ class CreatePinjaman extends CreateRecord
                                 ->live(),
                             DatePicker::make('tanggal_cicilan_pertama')
                                 ->date('d/m/Y')
+                                ->native(false)
                                 ->hidden(!($userAuth->hasRole($adminAccessApprove)))
                                 ->required(!($userAuth->hasRole($adminAccessApprove))),
                             FileUpload::make('berkas'),

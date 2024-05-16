@@ -66,7 +66,9 @@ class PengeluaranResource extends Resource
                     ->disabled(fn (Get $get) => $get('cabang_id') ? false : true)
                     ->live(),
                 DatePicker::make('tanggal')
+                    ->default(now())
                     ->maxDate(now())
+                    ->native(false)
                     ->required(),
                 TextInput::make('nominal')
                     ->mask(RawJs::make(<<<'JS'
