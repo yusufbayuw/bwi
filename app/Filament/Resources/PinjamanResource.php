@@ -13,27 +13,19 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
-use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Log;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Wizard;
-use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PinjamanResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
-use App\Filament\Resources\PinjamanResource\RelationManagers;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -95,6 +87,22 @@ class PinjamanResource extends Resource
                         TextInput::make('nama_kelompok')
                             ->required()
                             ->maxLength(255),
+                        ToggleButtons::make('dengan_pengurus')
+                            ->label('Apakah ada Pengurus dalam kelompok?')
+                            //->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                            ->options([
+                                '1' => 'ADA Pengurus',
+                                '0' => 'TIDAK ada Pengurus',
+                            ])
+                            ->icons([
+                                '1' => 'heroicon-o-check',
+                                '0' => 'heroicon-o-x-mark',
+                            ])
+                            ->colors([
+                                '1' => 'success',
+                                '0' => 'success',
+                            ])
+                            ->live(),
                         static::getSelectOption()
                             ->afterStateUpdated(
                                 fn (Select $component) => $component->getContainer()->getParentComponent()->getContainer()->getComponent('dynamicTypeFields')->getChildComponentContainer()->fill()
@@ -443,7 +451,7 @@ class PinjamanResource extends Resource
                     })
                     ->required()
                     ->disableOptionWhen(fn (string $value): bool => $value != null),
-                    //->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                //->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                 TextInput::make('bmpa')
                     ->label('BMPA')
                     ->mask(RawJs::make(<<<'JS'
@@ -467,16 +475,32 @@ class PinjamanResource extends Resource
         $adminAccess = config('bwi.adminAccess');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
 
+        $roleCabang = [
+            config('bwi.ketua_pengurus'),
+            config('bwi.bendahara'),
+            config('bwi.sekretaris'),
+            config('bwi.ketua_pembina'),
+            config('bwi.anggota_pembina'),
+            config('bwi.ketua_pengawas'),
+            config('bwi.anggota_pengawas')
+        ];
+
         if ($userAuthAdminAccess) {
             $userOption = null;
         } else {
-            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))->where('is_kelompok', false)->where('jenis_anggota', 'Anggota');
+            $userOption = User::where('cabang_id', ($userAuth->cabang_id ?? 0))
+                        ->where('is_kelompok', false)
+                        ->where('jenis_anggota', 'Anggota')
+                        ->whereDoesntHave('roles', function ($query) use ($roleCabang) {
+                            $query->whereIn('name', $roleCabang);
+                       });
             //$userOptionUser = $userOption->where('is_organ', false);
         }
 
         return Repeater::make('list_anggota')
             ->schema([
                 Select::make('user_id')
+                    ->searchable()
                     ->label('Nama Anggota')
                     ->options(function (Get $get) use ($userAuthAdminAccess, $userOption) {
                         if ($userAuthAdminAccess) {
@@ -491,6 +515,7 @@ class PinjamanResource extends Resource
                             return $userOption->pluck('name', 'id');
                         }
                     })
+                    ->preload()
                     ->afterStateUpdated(function (Set $set, $state) {
                         $set('bmpa', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
                         /* if (User::find($state)->is_organ ?? false) {
@@ -498,6 +523,7 @@ class PinjamanResource extends Resource
                         } */
                     })
                     ->required()
+                    ->live()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                 TextInput::make('bmpa')
                     ->label('BMPA')
@@ -508,7 +534,7 @@ class PinjamanResource extends Resource
                     ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                     ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
             ])
-            ->live(debounce: 500)
+            ->live()
             ->label('Daftar Anggota')
             ->reorderableWithDragAndDrop(false)
             ->deletable(false)

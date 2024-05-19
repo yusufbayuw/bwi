@@ -52,6 +52,17 @@ class CicilanObserver
                 $lunas->saveQuietly();
 
                 $userIds = Pinjaman::find($cicilan->pinjaman_id)->list_anggota;
+                $id_pengurus = Pinjaman::find($cicilan->pinjaman_id)->nama_pengurus;
+
+                if ($id_pengurus) {
+                    $nama_pengurus = User::find($id_pengurus);
+                    if ($nama_pengurus) {
+                        $nama_pengurus->pinjaman_id = null;
+                        $nama_pengurus->is_kelompok = false;
+                        $nama_pengurus->bmpa_gain_counter = $nama_pengurus->bmpa_gain_counter + 1;
+                        $nama_pengurus->save();
+                    }
+                }
 
                 foreach ($userIds as $userIdData) {
                     $userId = $userIdData['user_id'];
@@ -60,7 +71,8 @@ class CicilanObserver
                     if ($user) {
                         $user->pinjaman_id = null;
                         $user->is_kelompok = false;
-                        $user->bmpa = (float)$user->bmpa + 500000; 
+                        //$user->bmpa = (float)$user->bmpa + 500000; //automatic bmpa
+                        $user->bmpa_gain_counter = $user->bmpa_gain_counter + 1;
                         $user->save();
                     }
                 }

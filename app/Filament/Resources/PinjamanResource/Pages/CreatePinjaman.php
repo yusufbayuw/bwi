@@ -3,12 +3,11 @@
 namespace App\Filament\Resources\PinjamanResource\Pages;
 
 use Closure;
-use Filament\Actions;
+use App\Models\Mutasi;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Support\RawJs;
-use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -19,11 +18,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Wizard\Step;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\PinjamanResource;
-use App\Models\Mutasi;
-use Icetalker\FilamentStepper\Forms\Components\Stepper;
+use App\Models\User;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
 
 class CreatePinjaman extends CreateRecord
@@ -50,7 +48,7 @@ class CreatePinjaman extends CreateRecord
         $adminAccess = config('bwi.adminAccess');
         $adminAccessApprove = config('bwi.adminAccessApprove');
         $userAuthAdminAccess = $userAuth->hasRole($adminAccess);
-        
+
         $adminAccessCreatePinjaman = config('bwi.adminAccessCreatePinjaman');
         $userAuthAdminAccessCreatePinjaman = $userAuth->hasRole($adminAccessCreatePinjaman);
 
@@ -69,7 +67,30 @@ class CreatePinjaman extends CreateRecord
                                 ->required()
                                 ->disabled(!$userAuthAdminAccessCreatePinjaman)
                                 ->maxLength(255),
+                            ToggleButtons::make('dengan_pengurus')
+                                ->label('Apakah ada Pengurus dalam kelompok?')
+                                //->hidden(!($userAuth->hasRole($adminAccessApprove)))
+                                ->options([
+                                    '1' => 'ADA Pengurus',
+                                    '0' => 'TIDAK ada Pengurus',
+                                ])
+                                ->icons([
+                                    '1' => 'heroicon-o-check',
+                                    '0' => 'heroicon-o-x-mark',
+                                ])
+                                ->colors([
+                                    '1' => 'success',
+                                    '0' => 'success',
+                                ])
+                                ->live()
+                                ->afterStateUpdated(
+                                    fn (Set $set) => $set('jumlah_anggota', null)
+                                )
+                                ->inline()
+                                ->default(null),
                             PinjamanResource::getSelectOption()
+                                ->hidden(fn (Get $get) => ($get('dengan_pengurus') == null) ? true : false)
+                                ->required()
                                 ->afterStateUpdated(
                                     fn (Select $component) => $component->getContainer()->getParentComponent()->getContainer()->getComponent('dynamicTypeFields')->getChildComponentContainer()->fill()
                                 ),
@@ -77,88 +98,295 @@ class CreatePinjaman extends CreateRecord
                     Wizard\Step::make('Anggota')
                         ->description('daftarkan anggota kelompok')
                         ->schema(
-                            fn (Get $get): array => match ($get('jumlah_anggota')) {
-                                '5' => [
-                                    PinjamanResource::getItemsRepeaterCreate()
-                                        ->afterStateUpdated(function (Set $set, $state, Get $get) {
-                                            $totalBmpa = 9999999999;
-                                            foreach ($state as $key => $item) {
-                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                    $totalBmpa = (float)$bmpa;
+                            function (Get $get): array {
+                                $roleCabang = [
+                                    config('bwi.ketua_pengurus'),
+                                    config('bwi.bendahara'),
+                                    config('bwi.sekretaris'),
+                                    config('bwi.ketua_pembina'),
+                                    config('bwi.anggota_pembina'),
+                                    config('bwi.ketua_pengawas'),
+                                    config('bwi.anggota_pengawas')
+                                ];
+                                return match ($get('jumlah_anggota')) {
+                                    '5' => ($get('dengan_pengurus')) ? [
+                                        Select::make('nama_pengurus')->label('Nama Pengurus:')
+                                            ->options(User::where('cabang_id', auth()->user()->cabang_id)
+                                                ->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')
+                                                ->whereHas('roles', function ($query) use ($roleCabang) {
+                                                    $query->whereIn('name', $roleCabang);
+                                                })
+                                                ->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                                            })
+                                            ->live()
+                                            ->columnSpan(1)
+                                            ->required(),
+                                        TextInput::make('bmpa_pengurus')
+                                            ->label('BMPA Pengurus:')
+                                            ->columnSpan(1)
+                                            ->mask(RawJs::make(<<<'JS'
+                                        $money($input, ',', '.', 0)
+                                    JS))
+                                            ->readOnly()
+                                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                            ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
+                                                $totalBmpa = 9999999999;
+                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
+                                                if ($bmpa_pengurus) {
+                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
+                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
+                                                        $totalBmpa = (float)$bmpa_pengurus;
+                                                    }
                                                 }
-                                            };
-                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                            $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                            $set('cicilan_kelompok', number_format($totalBmpa / 5 * 5, 2, ",", "."));
-                                            $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
-                                            $set('status', 'Menunggu Verifikasi');
-                                        })
-                                        ->defaultItems(5)
-                                        ->maxItems(5)
-                                        ->minItems(5),
-                                ],
-                                '7' => [
-                                    PinjamanResource::getItemsRepeaterCreate()
-                                        ->afterStateUpdated(function (Set $set, $state) {
-                                            $totalBmpa = 9999999999;
-                                            foreach ($state as $key => $item) {
-                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                    $totalBmpa = (float)$bmpa;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 5, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(4)
+                                            ->maxItems(4)
+                                            ->minItems(4),
+                                    ] : [
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
+                                                $totalBmpa = 9999999999;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 5, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(5)
+                                            ->maxItems(5)
+                                            ->minItems(5),
+                                    ],
+                                    '7' => ($get('dengan_pengurus')) ? [
+                                        Select::make('nama_pengurus')->label('Nama Pengurus:')
+                                            ->options(User::where('cabang_id', auth()->user()->cabang_id)
+                                                ->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')
+                                                ->whereHas('roles', function ($query) use ($roleCabang) {
+                                                    $query->whereIn('name', $roleCabang);
+                                                })
+                                                ->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                                            })
+                                            ->live()
+                                            ->columnSpan(1)
+                                            ->required(),
+                                        TextInput::make('bmpa_pengurus')
+                                            ->label('BMPA Pengurus:')
+                                            ->columnSpan(1)
+                                            ->mask(RawJs::make(<<<'JS'
+                                        $money($input, ',', '.', 0)
+                                    JS))
+                                            ->readOnly()
+                                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                            ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
+                                                $totalBmpa = 9999999999;
+                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
+                                                if ($bmpa_pengurus) {
+                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
+                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
+                                                        $totalBmpa = (float)$bmpa_pengurus;
+                                                    }
                                                 }
-                                            };
-                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                            $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                            $set('cicilan_kelompok', number_format($totalBmpa / 5 * 7, 2, ",", "."));
-                                            $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
-                                            $set('status', 'Menunggu Verifikasi');
-                                        })
-                                        ->defaultItems(7)
-                                        ->maxItems(7)
-                                        ->minItems(7),
-                                ],
-                                '9' => [
-                                    PinjamanResource::getItemsRepeaterCreate()
-                                        ->afterStateUpdated(function (Set $set, $state) {
-                                            $totalBmpa = 9999999999;
-                                            foreach ($state as $key => $item) {
-                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                    $totalBmpa = (float)$bmpa;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 7, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(6)
+                                            ->maxItems(6)
+                                            ->minItems(6),
+                                    ] : [
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $totalBmpa = 9999999999;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 7, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(7)
+                                            ->maxItems(7)
+                                            ->minItems(7),
+                                    ],
+                                    '9' => ($get('dengan_pengurus')) ? [
+                                        Select::make('nama_pengurus')->label('Nama Pengurus:')
+                                            ->options(User::where('cabang_id', auth()->user()->cabang_id)
+                                                ->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')
+                                                ->whereHas('roles', function ($query) use ($roleCabang) {
+                                                    $query->whereIn('name', $roleCabang);
+                                                })
+                                                ->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                                            })
+                                            ->live()
+                                            ->columnSpan(1)
+                                            ->required(),
+                                        TextInput::make('bmpa_pengurus')
+                                            ->label('BMPA Pengurus:')
+                                            ->columnSpan(1)
+                                            ->mask(RawJs::make(<<<'JS'
+                                        $money($input, ',', '.', 0)
+                                    JS))
+                                            ->readOnly()
+                                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                            ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
+                                                $totalBmpa = 9999999999;
+                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
+                                                if ($bmpa_pengurus) {
+                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
+                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
+                                                        $totalBmpa = (float)$bmpa_pengurus;
+                                                    }
                                                 }
-                                            };
-                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                            $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                            $set('cicilan_kelompok', number_format($totalBmpa / 5 * 9, 2, ",", "."));
-                                            $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
-                                            $set('status', 'Menunggu Verifikasi');
-                                        })
-                                        ->defaultItems(9)
-                                        ->maxItems(9)
-                                        ->minItems(9),
-                                ],
-                                '11' => [
-                                    PinjamanResource::getItemsRepeaterCreate()
-                                        ->afterStateUpdated(function (Set $set, $state) {
-                                            $totalBmpa = 9999999999;
-                                            foreach ($state as $key => $item) {
-                                                $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                    $totalBmpa = (float)$bmpa;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 9, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(8)
+                                            ->maxItems(8)
+                                            ->minItems(8),
+                                    ] : [
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $totalBmpa = 9999999999;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 9, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(9)
+                                            ->maxItems(9)
+                                            ->minItems(9),
+                                    ],
+                                    '11' => ($get('dengan_pengurus')) ? [
+                                        Select::make('nama_pengurus')->label('Nama Pengurus:')
+                                            ->options(User::where('cabang_id', auth()->user()->cabang_id)
+                                                ->where('is_kelompok', false)->where('jenis_anggota', 'Anggota')
+                                                ->whereHas('roles', function ($query) use ($roleCabang) {
+                                                    $query->whereIn('name', $roleCabang);
+                                                })
+                                                ->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
+                                            })
+                                            ->live()
+                                            ->columnSpan(1)
+                                            ->required(),
+                                        TextInput::make('bmpa_pengurus')
+                                            ->label('BMPA Pengurus:')
+                                            ->columnSpan(1)
+                                            ->mask(RawJs::make(<<<'JS'
+                                        $money($input, ',', '.', 0)
+                                    JS))
+                                            ->readOnly()
+                                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                            ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
+                                                $totalBmpa = 9999999999;
+                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
+                                                if ($bmpa_pengurus) {
+                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
+                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
+                                                        $totalBmpa = (float)$bmpa_pengurus;
+                                                    }
                                                 }
-                                            };
-                                            $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                            $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                            $set('cicilan_kelompok', number_format($totalBmpa / 5 * 11, 2, ",", "."));
-                                            $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
-                                            $set('status', 'Menunggu Verifikasi');
-                                        })
-                                        ->defaultItems(11)
-                                        ->maxItems(11)
-                                        ->minItems(11),
-                                ],
-                                default => [],
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 11, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(10)
+                                            ->maxItems(10)
+                                            ->minItems(10),
+                                    ] : [
+                                        PinjamanResource::getItemsRepeaterCreate()
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $totalBmpa = 9999999999;
+                                                foreach ($state as $key => $item) {
+                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
+                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
+                                                        $totalBmpa = (float)$bmpa;
+                                                    }
+                                                };
+                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
+                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
+                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 11, 2, ",", "."));
+                                                $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
+                                                $set('status', 'Menunggu Verifikasi');
+                                            })
+                                            ->defaultItems(11)
+                                            ->maxItems(11)
+                                            ->minItems(11),
+                                    ],
+                                    default => [],
+                                };
                             }
                         )->key('dynamicTypeFields'),
                     Wizard\Step::make('Cicilan')
@@ -207,13 +435,13 @@ class CreatePinjaman extends CreateRecord
                                     },
                                     fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get, $userAuthAdminAccess) {
                                         $nilai = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $value)) * $get('jumlah_anggota');
-                                        $saldo_pinjaman = Mutasi::where('cabang_id',$get('cabang_id'))->orderBy('id', 'desc')->first()->saldo_umum;
+                                        $saldo_pinjaman = Mutasi::where('cabang_id', $get('cabang_id'))->orderBy('id', 'desc')->first()->saldo_umum;
                                         if ($nilai > $saldo_pinjaman) {
                                             Notification::make()
                                                 ->title("Total pinjaman terlalu besar (" . number_format($nilai, 2, ',', '.') . "), maksimal adalah " . number_format($saldo_pinjaman, 2, ',', '.'))
                                                 ->danger()
                                                 ->send();
-                                            $fail("Saldo tidak cukup. Maksimal pinjaman adalah " . number_format($saldo_pinjaman/$get('jumlah_anggota'), 2, ',', '.').".");
+                                            $fail("Saldo tidak cukup. Maksimal pinjaman adalah " . number_format($saldo_pinjaman / $get('jumlah_anggota'), 2, ',', '.') . ".");
                                         }
                                     },
 

@@ -49,6 +49,15 @@ class PinjamanObserver
 
             $lamaCicilan = (int)$pinjaman->lama_cicilan;
             $userIds = $pinjaman->list_anggota;
+
+            if ($pinjaman->nama_pengurus) {
+                $nama_pengurus = User::find($pinjaman->nama_pengurus);
+                if ($nama_pengurus) {
+                    $nama_pengurus->pinjaman_id = $pinjaman_id;
+                    $nama_pengurus->is_kelompok = true;
+                    $nama_pengurus->save();
+                }
+            }
             
             foreach ($userIds as $userIdData) {
                 $userId = $userIdData['user_id'];
