@@ -27,6 +27,7 @@ use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Section as ComponentsSection;
@@ -214,8 +215,8 @@ class UserResource extends Resource
                     ->hidden(!($userAuthAdminAccess)),
                 TextColumn::make('alamat')
                     ->searchable()
-                    ->limit(20),
-
+                    ->limit(20)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('cabangs.nama_cabang')
                     ->numeric()
                     ->icon('heroicon-m-building-office')
@@ -236,10 +237,12 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->searchable()
                     ->icon('heroicon-m-envelope')
-                    ->hidden(!($userAuthAdminAccess)),
+                    //->hidden(!($userAuthAdminAccess))
+                    ->copyable(),
                 TextColumn::make('username')
                     ->searchable()
-                    ->hidden(!($userAuthAdminAccess)),
+                    ->hidden(!($userAuthAdminAccess))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('no_hp')
                     ->label('Nomor HP')
                     ->icon('heroicon-m-phone')
@@ -249,24 +252,31 @@ class UserResource extends Resource
                     ->label('Nomor KTP')
                     ->icon('heroicon-m-identification')
                     //->formatStateUsing(fn ($state) => 'NIK: ' . $state)
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 ImageColumn::make('file_ktp')
                     ->label('Berkas KTP')
-                    ->simpleLightbox(),
+                    ->simpleLightbox()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('nomor_kk')
                     ->label('Nomor KK')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 ImageColumn::make('file_kk')
                     ->label('Berkas KK')
-                    ->simpleLightbox(),
+                    ->simpleLightbox()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('pekerjaan')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('penghasilan_bulanan')
                     ->label('Pendapatan')
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
+                    ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.'))
+                    ->toggleable(isToggledHiddenByDefault: true),
+                    
                 /* IconColumn::make('is_kelompok')
                                 ->boolean()
                                 ->hidden(!($userAuthAdminAccess)),
@@ -287,6 +297,43 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('aturBMPA')
+                    ->label('BMPA')
+                    ->icon('heroicon-o-arrow-trending-up')
+                    ->modalHeading(fn (User $user) => 'Apakah BMPA '.$user->name.' akan dinaikkan?')
+                    ->modalDescription(fn (User $user) => 'BMPA saat ini '.number_format($user->bmpa, 0, ',', '.').', jika dinaikkan maka BMPA akan menjadi '.number_format((float)$user->bmpa+500000, 0, ',', '.').'. Pilih NAIKKAN untuk menaikkan BMPA, atau TOLAK jika ingin BMPA tidak berubah. Selanjutnya klik Kirim untuk menyimpan perubahan, atau klik Batal jika tidak ingin mengubah apa pun.')
+                    ->form([
+                        ToggleButtons::make('bmpa_management')
+                            ->options([
+                                '2' => 'NAIKKAN',
+                                '1' => 'TOLAK',
+                            ])
+                            ->icons([
+                                '2' => 'heroicon-o-check',
+                                '1' => 'heroicon-o-x-mark',
+                            ])
+                            ->colors([
+                                '2' => 'success',
+                                '1' => 'danger',
+                            ])
+                            ->required()
+                            ->inline()
+                            ->extraAttributes(['class' => 'flex justify-center'])
+                            ->label('')
+                            ->hiddenLabel(true),
+                    ])
+                    ->modalIcon('heroicon-o-arrow-trending-up')
+                    ->modalAlignment(Alignment::Center)
+                    ->action(function (array $data, User $user): void {
+                        if ($data['bmpa_management'] == '2') {
+                            $user->bmpa_gain_counter = $user->bmpa_gain_counter - 1;
+                            $user->bmpa = (float)$user->bmpa + 500000;
+                            $user->save();
+                        } elseif ($data['bmpa_management'] == '1') {
+                            $user->bmpa_gain_counter = $user->bmpa_gain_counter - 1;
+                            $user->save();
+                        }
+                    })->hidden(fn (User $user) => ($user->bmpa_gain_counter > 0) ? false : true),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
