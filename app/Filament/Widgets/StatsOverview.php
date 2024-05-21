@@ -36,6 +36,7 @@ class StatsOverview extends BaseWidget
             $saldoKeamilan = $saldo->saldo_keamilan ?? 0;
             $saldoCSR = $saldo->saldo_csr ?? 0;
             $saldoCadangan = $saldo->saldo_cadangan ?? 0;
+            $saldoTotal = $saldoUmum + $saldoKeamilan + $saldoCSR + $saldoCadangan;
         }
 
         //$jumlahAnggota = ($userAuthCabang) ? User::where('cabang_id', $userAuthCabang)->count() : User::all()->count();
