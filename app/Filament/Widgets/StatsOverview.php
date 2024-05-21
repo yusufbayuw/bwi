@@ -20,7 +20,7 @@ class StatsOverview extends BaseWidget
             $saldoCSR = 0;
             $mutasiAll = Mutasi::all();
             foreach ($cabangs as $key => $cabangid) {
-                $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->sortByDesc('created_at')->first();
+                $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->orderBy('id', 'DESC')->first();
                 $saldoUmum += (float)($mutasiCabang->saldo_umum);
                 $saldoKeamilan += (float)($mutasiCabang->saldo_keamilan);
                 $saldoCSR += (float)($mutasiCabang->saldo_csr);
