@@ -11,6 +11,8 @@ class AcabangWidget extends Widget
 
     protected static bool $isLazy = false;
 
+    protected static ?string $pollingInterval = null;
+
     protected function getViewData(): array
     {
         $cabang = Cabang::find(auth()->user()->cabang_id);

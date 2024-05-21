@@ -14,6 +14,8 @@ class MenuGridWidget extends Widget
 
     protected static bool $isLazy = false;
 
+    protected static ?string $pollingInterval = null;
+
     protected int | string | array $columnSpan = 'full';
 
     protected function getViewData(): array
@@ -28,6 +30,7 @@ class MenuGridWidget extends Widget
         $cicilanUrl = null;
         $pengeluaranUrl = null;
         $laporanUrl = null;
+        $berkasUrl = null;
 
         foreach ($navigation as $key => $nav) {
             $item =  $nav->getItems()->toArray();
@@ -52,6 +55,8 @@ class MenuGridWidget extends Widget
                     $peranUrl = $navigationItem->getUrl();
                 } elseif ($label === 'Laporan') {
                     $laporanUrl = $navigationItem->getUrl();
+                } elseif ($label === 'Berkas') {
+                    $berkasUrl = $navigationItem->getUrl();
                 }
             }
         }
@@ -66,6 +71,7 @@ class MenuGridWidget extends Widget
             'pengeluaranUrl' => $pengeluaranUrl,
             'mutasiUrl' => $mutasiUrl,
             'laporanUrl' => $laporanUrl,
+            'berkasUrl' => $berkasUrl,
         ];
     }
 }

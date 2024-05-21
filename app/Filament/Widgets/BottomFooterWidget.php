@@ -11,6 +11,10 @@ class BottomFooterWidget extends Widget
     use HasWidgetShield;
     protected static string $view = 'filament.widgets.bottom-footer-widget';
 
+    protected static ?string $pollingInterval = null;
+
+    protected static bool $isLazy = false;
+
     protected function getViewData(): array
     {
         $navigation = Filament::getNavigation();
