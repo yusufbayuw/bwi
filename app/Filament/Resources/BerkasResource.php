@@ -49,7 +49,8 @@ class BerkasResource extends Resource
                 Tables\Columns\TextColumn::make('file')
                     ->label('Berkas')
                     ->formatStateUsing(fn ($state) => (explode('.', $state)[1] ?? 'file'))
-                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true),
+                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true)
+                    ->simpleLightbox(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
