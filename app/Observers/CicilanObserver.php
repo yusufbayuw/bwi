@@ -49,6 +49,8 @@ class CicilanObserver
             if ($cicilan->is_final) {
                 $lunas = Pinjaman::find($cicilan->pinjaman_id);
                 $lunas->status = "Lunas";
+                //is_organ adalah sudah lunas/belum
+                $lunas->is_organ = true;
                 $lunas->saveQuietly();
 
                 $userIds = Pinjaman::find($cicilan->pinjaman_id)->list_anggota;
