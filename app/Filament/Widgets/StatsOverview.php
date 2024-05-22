@@ -109,7 +109,7 @@ class StatsOverview extends BaseWidget
 
         return [
             Stat::make("Total Saldo", number_format($saldoTotal, 2, ',', '.'))
-                ->description($persentasePerubahanSaldoTotal)
+                ->description("Total uang seluruh cabang")
                 ->descriptionIcon($iconPerubahanSaldoTotal)
                 ->color($colorPerubahanSaldoTotal),
             Stat::make("Saldo Umum", number_format($saldoUmum, 2, ',', '.'))
