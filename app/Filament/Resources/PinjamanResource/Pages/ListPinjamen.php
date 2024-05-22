@@ -6,6 +6,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\PinjamanResource;
 use App\Filament\Widgets\BottomFooterWidget;
+use App\Filament\Widgets\StatsOverviewPinjaman;
 use EightyNine\ExcelImport\ExcelImportAction;
 
 class ListPinjamen extends ListRecords
@@ -27,6 +28,11 @@ class ListPinjamen extends ListRecords
         return [
             BottomFooterWidget::class,
         ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [StatsOverviewPinjaman::class];
     }
 
 }
