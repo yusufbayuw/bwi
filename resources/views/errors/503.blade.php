@@ -33,7 +33,7 @@
     </article>
     <script>
         const countDown = () => {
-            const countDay = new Date('May 23, 2024 06:00:00');
+            const countDay = new Date('May 24, 2024 06:00:00');
             const now = new Date();
             const counter = countDay - now;
             const second = 1000;

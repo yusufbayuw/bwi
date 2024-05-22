@@ -15,7 +15,7 @@ class StatsOverview extends BaseWidget
         $userAuth = auth()->user();
 
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            
+
             $cabangs = Cabang::pluck('id')->toArray();
             $saldoUmum = 0;
             $saldoKeamilan = 0;
@@ -50,6 +50,8 @@ class StatsOverview extends BaseWidget
             }
             $saldoTotal = $saldoUmum + $saldoKeamilan + $saldoCSR + $saldoCadangan;
             $saldoTotalBulanLalu = $saldoUmumBulanLalu + $saldoKeamilanBulanLalu + $saldoCSRBulanLalu + $saldoCadanganBulanLalu;
+
+            $deskripsiTotal = "Total uang seluruh cabang";
         } else {
             $userAuthCabang = $userAuth->cabang_id;
 
@@ -73,6 +75,8 @@ class StatsOverview extends BaseWidget
             $saldoCSRBulanLalu = (float)($mutasiCabangBulanLalu->saldo_csr ?? 0);
             $saldoCadanganBulanLalu = (float)($mutasiCabangBulanLalu->saldo_cadangan ?? 0);
             $saldoTotalBulanLalu = $saldoUmumBulanLalu + $saldoKeamilanBulanLalu + $saldoCSRBulanLalu + $saldoCadanganBulanLalu;
+
+            $deskripsiTotal = "Total uang cabang ini";
         }
         $perubahanSaldoTotal = $saldoTotal - $saldoTotalBulanLalu;
         $persenPerubahanSaldoTotal = (($saldoTotalBulanLalu == 0.0) ? '~' : number_format($perubahanSaldoTotal / $saldoTotalBulanLalu * 100, 2, ',', '.'));
@@ -107,7 +111,7 @@ class StatsOverview extends BaseWidget
 
         return [
             Stat::make("Total Saldo", number_format($saldoTotal, 2, ',', '.'))
-                ->description("Total uang seluruh cabang")
+                ->description($deskripsiTotal)
                 ->descriptionIcon($iconPerubahanSaldoTotal)
                 ->color($colorPerubahanSaldoTotal),
             Stat::make("Saldo Umum", number_format($saldoUmum, 2, ',', '.'))
