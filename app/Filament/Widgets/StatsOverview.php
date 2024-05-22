@@ -15,6 +15,7 @@ class StatsOverview extends BaseWidget
         $userAuth = auth()->user();
 
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
+            
             $cabangs = Cabang::pluck('id')->toArray();
             $saldoUmum = 0;
             $saldoKeamilan = 0;
@@ -24,7 +25,7 @@ class StatsOverview extends BaseWidget
             $saldoKeamilanBulanLalu = 0;
             $saldoCSRBulanLalu = 0;
             $saldoCadanganBulanLalu = 0;
-            $arrayku = [];
+
             $mutasiAll = Mutasi::all();
             foreach ($cabangs as $key => $cabangid) {
                 $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->whereBetween('created_at', [
@@ -35,9 +36,6 @@ class StatsOverview extends BaseWidget
                 $saldoKeamilan += (float)($mutasiCabang->saldo_keamilan ?? 0);
                 $saldoCSR += (float)($mutasiCabang->saldo_csr ?? 0);
                 $saldoCadangan += (float)($mutasiCabang->saldo_cadangan ?? 0);
-
-                $arrayku[] = $saldoUmum;
-
 
                 $mutasiCabangBulanLalu = $mutasiAll->where('cabang_id', $cabangid)->whereBetween('created_at', [
                     Carbon::now()->startOfMonth()->subMonthNoOverflow(),
