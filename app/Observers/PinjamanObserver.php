@@ -38,7 +38,7 @@ class PinjamanObserver
                 if ($nama_pengurus->is_kelompok) {
                     Notification::make()
                         ->title("Gagal: ". $nama_pengurus->name . " masih tergabung kelompok pinjaman.")
-                        ->body('Pastikan pinjaman kelompok '.$nama_pengurus->pinjamans()->nama_kelompok ." sudah lunas terlebih dahulu. Atau silakan pilih anggota/pengurus lain.")
+                        ->body('Pastikan pinjaman kelompok '.$nama_pengurus->pinjamans->nama_kelompok ." sudah lunas terlebih dahulu. Atau silakan pilih anggota/pengurus lain.")
                         ->danger()
                         ->send();
                     $counterPinjaman += 1;
@@ -52,7 +52,7 @@ class PinjamanObserver
                 if ($user->is_kelompok) {
                     Notification::make()
                         ->title("Gagal: ". $user->name . " masih tergabung kelompok pinjaman.")
-                        ->body('Pastikan pinjaman kelompok '.$user->pinjamans()->nama_kelompok ." sudah lunas terlebih dahulu. Atau silakan pilih anggota/pengurus lain.")
+                        ->body('Pastikan pinjaman kelompok '.$user->pinjamans->nama_kelompok ." sudah lunas terlebih dahulu. Atau silakan pilih anggota/pengurus lain.")
                         ->danger()
                         ->send();
                     $counterPinjaman += 1;
