@@ -34,6 +34,7 @@ use App\Filament\Resources\PinjamanResource\Pages;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section as ComponentsSection;
+use Illuminate\Validation\Rules\Unique;
 
 class PinjamanResource extends Resource
 {
@@ -89,6 +90,9 @@ class PinjamanResource extends Resource
                             Hidden::make('cabang_id')->default($userAuth->cabang_id),
                         TextInput::make('nama_kelompok')
                             ->required()
+                            ->unique(modifyRuleUsing: function (Unique $rule) use ($userAuthAdminAccess, $userAuth) {
+                                return ($userAuthAdminAccess ? $rule : $rule->where('cabang_id', $userAuth->cabang_id));
+                            }, ignoreRecord: true)
                             ->maxLength(255),
                         Hidden::make('dengan_pengurus'),
                         Hidden::make('jumlah_anggota'),
@@ -120,18 +124,8 @@ class PinjamanResource extends Resource
                             ->mask(RawJs::make(<<<'JS'
                                     $money($input, ',', '.', 2)
                                 JS))
-                            ->hint(fn (Get $get) => "Nominal pinjaman per anggota tidak boleh melebihi ". number_format($get('nominal_bmpa_max'), 2, ',', '.'))
-                            /* ->dehydrateStateUsing(function (Set $set, Get $get, $state) {
-                                $lama_cicilan = (int)$get('lama_cicilan');
-                                $nominal_pinjaman = $state;
-                                if ($lama_cicilan && $nominal_pinjaman) {
-                                    $total_pinjaman = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $nominal_pinjaman))) * (int)$get('jumlah_anggota');
-                                    $number_total = $total_pinjaman / $lama_cicilan;
-                                    $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
-                                    $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
-                                }
-                                return str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state));
-                            }) */
+                            ->hint(fn (Get $get) => "Nominal pinjaman per anggota tidak boleh melebihi " . number_format($get('nominal_bmpa_max'), 2, ',', '.'))
+                            ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
                             ->live(onBlur: true)
                             ->required()
@@ -177,8 +171,6 @@ class PinjamanResource extends Resource
                             ->hint('Minimal 5 minggu, maksimal 50 minggu')
                             ->minValue(5)
                             ->maxValue(50)
-                            //->step(5)
-                            ->default(5)
                             ->required()
                             ->inputMode('numeric')
                             ->live(onBlur: true)
@@ -191,20 +183,7 @@ class PinjamanResource extends Resource
                                     $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
                                     $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
                                 }
-                            })
-                            /* ->dehydrateStateUsing(
-                                function (Set $set, Get $get, $state) {
-                                    $lama_cicilan = (int)$state;
-                                    $nominal_pinjaman = $get('nominal_pinjaman');
-                                    if ($lama_cicilan && $nominal_pinjaman) {
-                                        $total_pinjaman = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $nominal_pinjaman))) * (int)$get('jumlah_anggota');
-                                        $number_total = $total_pinjaman / $lama_cicilan;
-                                        $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
-                                        $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
-                                    }
-                                    return $state;
-                                }
-                            ) */,
+                            }),
                         TextInput::make('total_pinjaman')
                             ->mask(RawJs::make(<<<'JS'
                                 $money($input, ',', '.', 2)
@@ -238,7 +217,50 @@ class PinjamanResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->afterStateUpdated(fn (Set $set, $state) => $state ? $set('status', 'Cicilan Berjalan') : '')
+                            ->afterStateUpdated(function (Pinjaman $pinjaman, $state, Set $set) {
+                                if ($state) {
+                                    $userIds = $pinjaman->list_anggota;
+    
+                                    $counterPinjaman = 0;
+                                    if ($pinjaman->nama_pengurus) {
+                                        $nama_pengurus = User::find($pinjaman->nama_pengurus);
+                                        if ($nama_pengurus->is_kelompok) {
+                                            Notification::make()
+                                                ->title("Gagal: " . $nama_pengurus->name . " masih tergabung kelompok pinjaman.")
+                                                ->body('Pastikan pinjaman kelompok ' . $nama_pengurus->pinjamans->nama_kelompok . " sudah lunas terlebih dahulu. Kelompok ini akan ditolak.")
+                                                ->danger()
+                                                ->send();
+                                            $counterPinjaman += 1;
+                                        }
+                                    }
+    
+                                    foreach ($userIds as $userIdData) {
+                                        $userId = $userIdData['user_id'];
+                                        $user = User::find($userId);
+    
+                                        if ($user->is_kelompok) {
+                                            Notification::make()
+                                                ->title("Gagal: " . $user->name . " masih tergabung kelompok pinjaman.")
+                                                ->body('Pastikan pinjaman kelompok ' . $user->pinjamans->nama_kelompok . " sudah lunas terlebih dahulu. Kelompok ini akan ditolak.")
+                                                ->danger()
+                                                ->send();
+                                            $counterPinjaman += 1;
+                                        }
+                                    }
+
+                                    if ($counterPinjaman) {
+                                        $set('status', 'Ditolak');
+                                        $set('acc_pinjaman', -1);
+                                        $set('cicilan_kelompok', 0);
+                                        $set('total_pinjaman', 0);
+                                        $set('nominal_pinjaman', 0);
+                                        $set('lama_cicilan', 5);
+                                    } else {
+                                        $set('status', 'Cicilan Berjalan');
+                                    }
+                                }
+                            })
+                            //->afterStateUpdated(fn (Set $set, $state) => $state ? $set('status', 'Cicilan Berjalan') : '')
                             ->live()
                             ->rules([
                                 fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get, $userAuthAdminAccess) {
@@ -255,7 +277,7 @@ class PinjamanResource extends Resource
                         DatePicker::make('tanggal_cicilan_pertama')
                             ->date('d/m/Y')
                             ->native(false)
-                            ->hidden((fn (Get $get) => (!($userAuth->hasRole($adminAccessApprove))) || ($get('acc_pinjaman') == 0)))
+                            ->hidden((fn (Get $get) => (!($userAuth->hasRole($adminAccessApprove))) || ($get('acc_pinjaman') != 1)))
                             ->required($userAuth->hasRole($adminAccessApprove)),
                         FileUpload::make('berkas'),
                     ])
@@ -288,8 +310,8 @@ class PinjamanResource extends Resource
                         thousandsSeparator: '.',
                     ),
                 ImageColumn::make('berkas')->simpleLightbox(),
-                TextColumn::make('nominal_bmpa_max')
-                    ->searchable()
+                TextColumn::make('total_pinjaman')
+                    ->sortable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -302,17 +324,22 @@ class PinjamanResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                TextColumn::make('status')
-                    ->searchable()->badge(),
-                TextColumn::make('total_pinjaman')
+                TextColumn::make('cicilan_kelompok')
                     ->sortable()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
+                TextColumn::make('status')
+                    ->searchable()->badge(),
+
                 IconColumn::make('acc_pinjaman')
-                    ->boolean(),
+                    ->icon(fn (string $state): string => match ($state) {
+                        '-1' => 'heroicon-o-x-circle',
+                        '0' => 'heroicon-o-clock',
+                        '1' => 'heroicon-o-check-circle',
+                    }),
                 TextColumn::make('tanggal_cicilan_pertama')
                     ->date()
                     ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
@@ -332,7 +359,7 @@ class PinjamanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->hidden(fn (Pinjaman $pinjaman) => $pinjaman->acc_pinjaman),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -556,10 +583,6 @@ class PinjamanResource extends Resource
                         /* if (User::find($state)->is_organ ?? false) {
                             $set('../../is_organ', true);
                         } */
-                    })
-                    ->dehydrateStateUsing(function (Set $set, $state) {
-                        $set('bmpa', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                        return $state;
                     })
                     ->required()
                     ->live()

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PinjamanResource\Pages;
 
 use Closure;
+use App\Models\User;
 use App\Models\Mutasi;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -13,12 +14,12 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Validation\Rules\Unique;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\PinjamanResource;
-use App\Models\User;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
 
@@ -63,6 +64,9 @@ class CreatePinjaman extends CreateRecord
                                 Hidden::make('cabang_id')->default($userAuth->cabang_id),
                             TextInput::make('nama_kelompok')
                                 ->required()
+                                ->unique(modifyRuleUsing: function (Unique $rule) use ($userAuthAdminAccess, $userAuth) {
+                                    return ($userAuthAdminAccess ? $rule : $rule->where('cabang_id', $userAuth->cabang_id));
+                                }, ignoreRecord:true)
                                 ->label("Buat Nama Kelompok Pinjaman:")
                                 ->disabled(!$userAuthAdminAccessCreatePinjaman)
                                 ->maxLength(255),
@@ -121,10 +125,6 @@ class CreatePinjaman extends CreateRecord
                                             ->afterStateUpdated(function (Set $set, $state) {
                                                 $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
                                             })
-                                            ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                                return $state;
-                                            })
                                             ->live()
                                             ->columnSpan(1)
                                             ->required(),
@@ -160,28 +160,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state, Get $get) {
-                                                $totalBmpa = 9999999999;
-                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
-                                                if ($bmpa_pengurus) {
-                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
-                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
-                                                        $totalBmpa = (float)$bmpa_pengurus;
-                                                    }
-                                                }
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 5, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(4)
                                             ->maxItems(4)
                                             ->minItems(4),
@@ -201,21 +179,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state, Get $get) {
-                                                $totalBmpa = 9999999999;
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 5, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 5, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(5)
                                             ->maxItems(5)
                                             ->minItems(5),
@@ -231,10 +194,6 @@ class CreatePinjaman extends CreateRecord
                                             ->searchable()
                                             ->afterStateUpdated(function (Set $set, $state) {
                                                 $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                            })
-                                            ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                                return $state;
                                             })
                                             ->live()
                                             ->columnSpan(1)
@@ -270,28 +229,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state, Get $get) {
-                                                $totalBmpa = 9999999999;
-                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
-                                                if ($bmpa_pengurus) {
-                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
-                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
-                                                        $totalBmpa = (float)$bmpa_pengurus;
-                                                    }
-                                                }
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 7, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(6)
                                             ->maxItems(6)
                                             ->minItems(6),
@@ -311,21 +248,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $totalBmpa = 9999999999;
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 7, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 7, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(7)
                                             ->maxItems(7)
                                             ->minItems(7),
@@ -341,10 +263,6 @@ class CreatePinjaman extends CreateRecord
                                             ->searchable()
                                             ->afterStateUpdated(function (Set $set, $state) {
                                                 $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                            })
-                                            ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                                return $state;
                                             })
                                             ->live()
                                             ->columnSpan(1)
@@ -380,28 +298,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state, Get $get) {
-                                                $totalBmpa = 9999999999;
-                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
-                                                if ($bmpa_pengurus) {
-                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
-                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
-                                                        $totalBmpa = (float)$bmpa_pengurus;
-                                                    }
-                                                }
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 9, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(8)
                                             ->maxItems(8)
                                             ->minItems(8),
@@ -421,21 +317,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $totalBmpa = 9999999999;
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 9, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 9, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(9)
                                             ->maxItems(9)
                                             ->minItems(9),
@@ -451,10 +332,6 @@ class CreatePinjaman extends CreateRecord
                                             ->searchable()
                                             ->afterStateUpdated(function (Set $set, $state) {
                                                 $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                            })
-                                            ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $set('bmpa_pengurus', number_format(User::where('id', $state)->first()->bmpa  ?? null, 2, ",", "."));
-                                                return $state;
                                             })
                                             ->live()
                                             ->columnSpan(1)
@@ -491,28 +368,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state, Get $get) {
-                                                $totalBmpa = 9999999999;
-                                                $bmpa_pengurus = $get('bmpa_pengurus') ?? null;
-                                                if ($bmpa_pengurus) {
-                                                    $bmpa_pengurus = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $bmpa_pengurus));
-                                                    if ($totalBmpa > (float)$bmpa_pengurus) {
-                                                        $totalBmpa = (float)$bmpa_pengurus;
-                                                    }
-                                                }
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 11, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(10)
                                             ->maxItems(10)
                                             ->minItems(10),
@@ -532,21 +387,6 @@ class CreatePinjaman extends CreateRecord
                                                 $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
                                                 $set('status', 'Menunggu Verifikasi');
                                             })
-                                            /* ->dehydrateStateUsing(function (Set $set, $state) {
-                                                $totalBmpa = 9999999999;
-                                                foreach ($state as $key => $item) {
-                                                    $bmpa = str_replace(",", ".", preg_replace('/[^0-9,]/', '', $item['bmpa']));
-                                                    if (($totalBmpa > (float)$bmpa) && $bmpa) {
-                                                        $totalBmpa = (float)$bmpa;
-                                                    }
-                                                };
-                                                $set('nominal_bmpa_max', number_format($totalBmpa, 2, ",", "."));
-                                                $set('nominal_pinjaman', number_format($totalBmpa, 2, ",", "."));
-                                                $set('cicilan_kelompok', number_format($totalBmpa / 5 * 11, 2, ",", "."));
-                                                $set('total_pinjaman', number_format($totalBmpa * 11, 2, ",", "."));
-                                                $set('status', 'Menunggu Verifikasi');
-                                                return $state;
-                                            }) */
                                             ->defaultItems(11)
                                             ->maxItems(11)
                                             ->minItems(11),
@@ -572,7 +412,7 @@ class CreatePinjaman extends CreateRecord
                                     $money($input, ',', '.', 2)
                                 JS))
                                 //->hint("Nominal pinjaman per anggota tidak boleh melebihi maksimum pinjaman per anggota")
-                                //->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
+                                ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                                 ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
                                 ->live(onBlur: true)
                                 ->required()
@@ -585,17 +425,6 @@ class CreatePinjaman extends CreateRecord
                                         $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
                                         $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
                                     }
-                                })
-                                ->dehydrateStateUsing(function (Set $set, Get $get, $state) {
-                                    $lama_cicilan = (int)$get('lama_cicilan');
-                                    $nominal_pinjaman = $state;
-                                    if ($lama_cicilan && $nominal_pinjaman) {
-                                        $total_pinjaman = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $nominal_pinjaman))) * (int)$get('jumlah_anggota');
-                                        $number_total = $total_pinjaman / $lama_cicilan;
-                                        $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
-                                        $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
-                                    }
-                                    return str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state));
                                 })
                                 ->rules([
 
@@ -623,14 +452,6 @@ class CreatePinjaman extends CreateRecord
                                     },
 
                                 ]),
-                            /* Stepper::make('lama_cicilan')
-                                ->label('Lama Cicilan (minggu)')
-                                ->minValue(5)
-                                ->maxValue(50)
-                                ->step(5)
-                                ->default(5)
-                                ->disableManualInput()
-                                ->live(debounce: 1000) */
                             TextInput::make('lama_cicilan')
                                 ->numeric()
                                 ->label('Lama Cicilan (minggu)')
@@ -649,17 +470,6 @@ class CreatePinjaman extends CreateRecord
                                         $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
                                         $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
                                     }
-                                })
-                                ->dehydrateStateUsing(function (Set $set, Get $get, $state) {
-                                    $lama_cicilan = (int)$state;
-                                    $nominal_pinjaman = $get('nominal_pinjaman');
-                                    if ($lama_cicilan && $nominal_pinjaman) {
-                                        $total_pinjaman = (float)(str_replace(",", ".", preg_replace('/[^0-9,]/', '', $nominal_pinjaman))) * (int)$get('jumlah_anggota');
-                                        $number_total = $total_pinjaman / $lama_cicilan;
-                                        $set('cicilan_kelompok', number_format($number_total, 2, ',', '.'));
-                                        $set('total_pinjaman', number_format($total_pinjaman, 2, ',', '.'));
-                                    }
-                                    return $state;
                                 }),
                             TextInput::make('total_pinjaman')
                                 ->mask(RawJs::make(<<<'JS'
