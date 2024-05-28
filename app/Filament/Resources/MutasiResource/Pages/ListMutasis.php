@@ -18,6 +18,7 @@ class ListMutasis extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $adminAccess = auth()->user()->hasRole(config('bwi.adminAccess'));
         return [
             ExportAction::make()->exports([
                 ExcelExport::make('Export')
@@ -44,7 +45,7 @@ class ListMutasis extends ListRecords
                     ])
                     ->withFilename('Mutasi-' . date('d-m-Y') . '-export')
                     ->withWriterType(\Maatwebsite\Excel\Excel::XLSX),
-            ])
+            ])->hidden(!$adminAccess)
             /* ExcelImportAction::make()
                 ->color("primary")
                 ->hidden(!auth()->user()->hasRole('super_admin')), */

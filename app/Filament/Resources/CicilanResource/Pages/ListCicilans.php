@@ -3,12 +3,17 @@
 namespace App\Filament\Resources\CicilanResource\Pages;
 
 use Filament\Actions;
+use App\Models\Cabang;
+use App\Models\Pinjaman;
+use pxlrbt\FilamentExcel\Columns\Column;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CicilanResource;
 use App\Filament\Widgets\BottomFooterWidget;
 use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Resources\Pages\ListRecords\Tab;
-use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
 
 class ListCicilans extends ListRecords
 {
@@ -18,7 +23,28 @@ class ListCicilans extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $adminAccess = auth()->user()->hasRole(config('bwi.adminAccess'));
         return [
+            ExportAction::make()->exports([
+                ExcelExport::make('Export')
+                    ->withColumns([
+                        Column::make('cabang_id')
+                            ->heading('Cabang')
+                            ->formatStateUsing(fn ($state) => Cabang::find($state)->nama_cabang ?? ""),
+                        Column::make('pinjaman_id')
+                            ->heading('Kelompok')
+                            ->formatStateUsing(fn ($state) => Pinjaman::find($state)->nama_kelompok ?? ""),
+                        Column::make('tanggal_cicilan')
+                            ->heading('Tanggal Tagihan'),
+                        Column::make('tanggal')
+                            ->heading('Tanggal'),
+                        Column::make('jenis')
+                            ->heading('Jenis'),
+                        
+                    ])
+                    ->withFilename('Infak-' . date('d-m-Y') . '-export')
+                    ->withWriterType(\Maatwebsite\Excel\Excel::XLSX),
+            ])->hidden(!$adminAccess),
             ExcelImportAction::make()
                 ->color("primary")
                 ->hidden(!auth()->user()->hasRole('super_admin')),
