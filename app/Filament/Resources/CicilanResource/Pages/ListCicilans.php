@@ -36,10 +36,14 @@ class ListCicilans extends ListRecords
                             ->formatStateUsing(fn ($state) => Pinjaman::find($state)->nama_kelompok ?? ""),
                         Column::make('tanggal_cicilan')
                             ->heading('Tanggal Tagihan'),
-                        Column::make('tanggal')
-                            ->heading('Tanggal'),
-                        Column::make('jenis')
-                            ->heading('Jenis'),
+                        Column::make('nominal_cicilan')
+                            ->heading('Nominal'),
+                        Column::make('tagihan_ke')
+                            ->heading('Tagihan Ke-'),
+                        Column::make('status_cicilan')
+                            ->heading('Status Pembayaran')
+                            ->formatStateUsing(fn ($state) => ($state ? 'Lunas' : 'Belum Dibayar')),
+                            Column::make('tanggal_bayar')->heading('Tanggal Bayar')
                         
                     ])
                     ->withFilename('Infak-' . date('d-m-Y') . '-export')
