@@ -105,12 +105,12 @@ class PinjamanResource extends Resource
                                 ->readOnly()
                                 ->dehydrated(false)
                                 ->hidden(fn ($state) => !isset($state))
-                                ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                ->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                             TextInput::make('bmpa_pengurus')
                                 ->readOnly()
                                 ->required()
                                 ->dehydrated(false)
-                                ->hidden(fn ($state) => !isset($state))
+                                ->hidden(fn (Get $get) => ($get('nama_pengurus') == null))
                                 ->formatStateUsing(fn ($state) => number_format($state, 2, ',', '.')),
                             static::getItemsRepeater(),
                         ]
@@ -304,6 +304,7 @@ class PinjamanResource extends Resource
                     ->searchable(),
                 TextColumn::make('jumlah_anggota')
                     ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 0,
                         decimalSeparator: ',',
@@ -312,6 +313,7 @@ class PinjamanResource extends Resource
                 ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('total_pinjaman')
                     ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -320,12 +322,14 @@ class PinjamanResource extends Resource
                 TextColumn::make('lama_cicilan')
                     ->numeric()
                     ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
                 TextColumn::make('cicilan_kelompok')
                     ->sortable()
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -401,7 +405,7 @@ class PinjamanResource extends Resource
                                 ])->schema([
                                     TextEntry::make('nama_pengurus')
                                         ->label('')
-                                        ->formatStateUsing(fn ($state) => User::find($state)->name)
+                                        ->formatStateUsing(fn ($state) => User::find($state)->name ?? "")
                                         ->hidden(fn ($state) => !isset($state)),
                                     TextEntry::make('bmpa_pengurus')
                                         ->label('')
@@ -423,7 +427,7 @@ class PinjamanResource extends Resource
                                     ])
                                     ->schema([
                                         TextEntry::make('user_id')
-                                            ->formatStateUsing(fn ($state) => User::find($state)->name)
+                                            ->formatStateUsing(fn ($state) => User::find($state)->name ?? "")
                                             ->columnSpan(1)
                                             ->label(''),
                                         TextEntry::make('bmpa')
@@ -512,7 +516,7 @@ class PinjamanResource extends Resource
                     ->label('Nama Anggota')
                     ->readOnly()
                     ->dehydrated(false)
-                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                    ->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                 TextInput::make('bmpa')
                     ->label('BMPA')
                     ->dehydrated(false)

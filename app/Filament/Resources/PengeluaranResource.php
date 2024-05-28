@@ -130,7 +130,7 @@ class PengeluaranResource extends Resource
                     ->disabled(fn (Get $get) => (($get('jenis') ? false : true)))
                     ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                     ->formatStateUsing(fn ($state) => str_replace(".", ",", $state))
-                    ->live(debounce: 300),
+                    ->live(onBlur:true),
                 TextInput::make('keterangan')
                     ->required(),
                 FileUpload::make('berkas'),
@@ -158,7 +158,8 @@ class PengeluaranResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     )
-                    ->sortable(),
+                    ->sortable()
+                    ->alignRight(),
                 ImageColumn::make('berkas')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()

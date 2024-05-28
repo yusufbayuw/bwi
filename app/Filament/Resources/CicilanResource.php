@@ -167,13 +167,13 @@ class CicilanResource extends Resource
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
-                    ),
+                    )->alignRight(),
                 TextColumn::make('tagihan_ke')
                     ->searchable()
                     ->numeric(
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
-                    ),
+                    )->alignRight(),
                 IconColumn::make('status_cicilan')
                     ->label('Status Pembayaran')
                     ->boolean(),

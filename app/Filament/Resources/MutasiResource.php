@@ -118,6 +118,8 @@ class MutasiResource extends Resource
                     ),
                 TextColumn::make('saldo_umum')
                     ->searchable()
+                    ->label('Saldo Umum')
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -125,6 +127,8 @@ class MutasiResource extends Resource
                     ),
                 TextColumn::make('saldo_keamilan')
                     ->searchable()
+                    ->label('Saldo Keamilan')
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -132,6 +136,8 @@ class MutasiResource extends Resource
                     ),
                 TextColumn::make('saldo_csr')
                     ->searchable()
+                    ->label('Saldo Sosial')
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',
@@ -139,6 +145,8 @@ class MutasiResource extends Resource
                     ),
                 TextColumn::make('saldo_cadangan')
                     ->searchable()
+                    ->label('Saldo Cadangan')
+                    ->alignRight()
                     ->numeric(
                         decimalPlaces: 2,
                         decimalSeparator: ',',

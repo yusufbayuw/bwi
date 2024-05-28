@@ -207,11 +207,11 @@ class CabangResource extends Resource
                             ->schema([
                                 TextEntry::make('ketua_pembina')
                                     ->label('Ketua Pembina:')
-                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                 RepeatableEntry::make('anggota_pembina')
                                     ->label('Anggota Pembina:')
                                     ->schema([
-                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                     ])
                                     ->contained(false),
                             ]),
@@ -219,11 +219,11 @@ class CabangResource extends Resource
                             ->schema([
                                 TextEntry::make('ketua_pengawas')
                                     ->label('Ketua Pengawas:')
-                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                 RepeatableEntry::make('anggota_pengawas')
                                     ->label('Anggota Pengawas:')
                                     ->schema([
-                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                     ])
                                     ->contained(false),
                             ]),
@@ -231,17 +231,17 @@ class CabangResource extends Resource
                             ->schema([
                                 TextEntry::make('ketua_pengurus')
                                     ->label('Ketua Pengelola:')
-                                    ->formatStateUsing(fn ($state) => User::find($state)->name),
+                                    ->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                 RepeatableEntry::make('sekretaris')
                                     ->label('Sekretaris:')
                                     ->schema([
-                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                     ])
                                     ->contained(false),
                                 RepeatableEntry::make('bendahara')
                                     ->label('Bendahara:')
                                     ->schema([
-                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name),
+                                        TextEntry::make('nama')->label("")->formatStateUsing(fn ($state) => User::find($state)->name ?? ""),
                                     ])->contained(false)
                                     ,
                             ]),

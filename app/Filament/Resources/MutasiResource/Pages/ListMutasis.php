@@ -43,11 +43,12 @@ class ListMutasis extends ListRecords
                         Column::make('saldo_cadangan')
                             ->heading('Saldo Cadangan')
                     ])
-                    ->withFilename('Mutasi-' . date('d-m-Y') . '-export')
+                    ->withFilename('BWI-Mutasi-' . now() . '-export')
                     ->withWriterType(\Maatwebsite\Excel\Excel::XLSX),
             ])->hidden(!$adminAccess)
             /* ExcelImportAction::make()
                 ->color("primary")
+                ->icon('heroicon-o-arrow-up-tray')
                 ->hidden(!auth()->user()->hasRole('super_admin')), */
             //Actions\CreateAction::make(),
         ];

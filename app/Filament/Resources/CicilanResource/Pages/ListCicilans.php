@@ -43,14 +43,15 @@ class ListCicilans extends ListRecords
                         Column::make('status_cicilan')
                             ->heading('Status Pembayaran')
                             ->formatStateUsing(fn ($state) => ($state ? 'Lunas' : 'Belum Dibayar')),
-                            Column::make('tanggal_bayar')->heading('Tanggal Bayar')
-                        
+                        Column::make('tanggal_bayar')->heading('Tanggal Bayar')
+
                     ])
-                    ->withFilename('Infak-' . date('d-m-Y') . '-export')
+                    ->withFilename('BWI-Cicilan-' . now() . '-export')
                     ->withWriterType(\Maatwebsite\Excel\Excel::XLSX),
             ])->hidden(!$adminAccess),
             ExcelImportAction::make()
                 ->color("primary")
+                ->icon('heroicon-o-arrow-up-tray')
                 ->hidden(!auth()->user()->hasRole('super_admin')),
             Actions\CreateAction::make(),
         ];
@@ -69,7 +70,7 @@ class ListCicilans extends ListRecords
         $adminAuth = $userAuth->hasRole(config('bwi.adminAccess'));
         $cabang_id = $userAuth->cabang_id;
         return [
-            'Belum Dibayar' => Tab::make()->query(fn ($query) => $adminAuth ? $query->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc') : $query->where('cabang_id', $cabang_id)->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc') ),
+            'Belum Dibayar' => Tab::make()->query(fn ($query) => $adminAuth ? $query->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc') : $query->where('cabang_id', $cabang_id)->where('status_cicilan', false)->orderBy('tanggal_cicilan', 'asc')->orderBy('tagihan_ke', 'asc')),
             'Lunas' => Tab::make()->query(fn ($query) => $adminAuth ? $query->where('status_cicilan', true)->orderBy('updated_at', 'desc') : $query->where('cabang_id', $cabang_id)->where('status_cicilan', true)->orderBy('updated_at', 'desc')),
         ];
     }

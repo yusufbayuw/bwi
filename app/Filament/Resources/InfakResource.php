@@ -113,7 +113,7 @@ class InfakResource extends Resource
                         decimalPlaces: 2,
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
-                    ),
+                    )->alignRight(),
                 TextColumn::make('tanggal')
                     ->date()
                     ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
