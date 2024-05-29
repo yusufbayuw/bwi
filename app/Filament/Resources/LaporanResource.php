@@ -45,16 +45,19 @@ class LaporanResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('cabang_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tanggal')
-                    ->date()
+                Tables\Columns\TextColumn::make('cabangs.nama_cabang')
+                    ->limit(25)
+                    ->label('Cabang')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('jenis')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('berkas')
-                    ->simpleLightbox(),
+                Tables\Columns\TextColumn::make('tanggal')
+                    ->date('M Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('berkas')
+                    ->formatStateUsing(fn ($state) => (explode('.', $state)[1] ?? 'file'))
+                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

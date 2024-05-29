@@ -47,4 +47,9 @@ class Cabang extends Model
     {
         return $this->hasMany(Mutasi::class, 'cabang_id', 'id');
     }
+
+    public function laporans(): HasMany
+    {
+        return $this->hasMany(Laporan::class, 'cabang_id', 'id');
+    }
 }

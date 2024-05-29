@@ -180,6 +180,6 @@ class LaporanBulananCabangController extends Controller
         ];
 
         $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang', $data);
-        return $pdf->stream(); //download('invoice.pdf');
+        return $pdf->save(public_path('storage/'.$cabang_nama.'-Laporan '-$jenis_laporan.' '.$bulan_laporan.'.pdf')); //download('invoice.pdf');
     }
 }
