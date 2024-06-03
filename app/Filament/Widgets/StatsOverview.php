@@ -59,10 +59,10 @@ class StatsOverview extends BaseWidget
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth()
             ])->orderBy('id', 'DESC')->first();
-            $saldoUmum = (float)$saldo->saldo_umum ?? 0;
-            $saldoKeamilan = (float)$saldo->saldo_keamilan ?? 0;
-            $saldoCSR = (float)$saldo->saldo_csr ?? 0;
-            $saldoCadangan = (float)$saldo->saldo_cadangan ?? 0;
+            $saldoUmum = (float)($saldo->saldo_umum ?? 0);
+            $saldoKeamilan = (float)($saldo->saldo_keamilan ?? 0);
+            $saldoCSR = (float)($saldo->saldo_csr ?? 0);
+            $saldoCadangan = (float)($saldo->saldo_cadangan ?? 0);
             $saldoTotal = $saldoUmum + $saldoKeamilan + $saldoCSR + $saldoCadangan;
 
             $mutasiCabangBulanLalu = Mutasi::where('cabang_id', $userAuthCabang)->whereBetween('created_at', [
