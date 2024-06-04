@@ -28,10 +28,7 @@ class StatsOverview extends BaseWidget
 
             $mutasiAll = Mutasi::all();
             foreach ($cabangs as $key => $cabangid) {
-                $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->whereBetween('created_at', [
-                    Carbon::now()->startOfMonth(),
-                    Carbon::now()->endOfMonth()
-                ])->sortByDesc('id')->first();
+                $mutasiCabang = $mutasiAll->where('cabang_id', $cabangid)->sortByDesc('id')->first();
                 $saldoUmum += (float)($mutasiCabang->saldo_umum ?? 0);
                 $saldoKeamilan += (float)($mutasiCabang->saldo_keamilan ?? 0);
                 $saldoCSR += (float)($mutasiCabang->saldo_csr ?? 0);
@@ -55,10 +52,7 @@ class StatsOverview extends BaseWidget
         } else {
             $userAuthCabang = $userAuth->cabang_id;
 
-            $saldo = Mutasi::where('cabang_id', $userAuthCabang)->whereBetween('created_at', [
-                Carbon::now()->startOfMonth(),
-                Carbon::now()->endOfMonth()
-            ])->orderBy('id', 'DESC')->first();
+            $saldo = Mutasi::where('cabang_id', $userAuthCabang)->orderBy('id', 'DESC')->first();
             $saldoUmum = (float)($saldo->saldo_umum ?? 0);
             $saldoKeamilan = (float)($saldo->saldo_keamilan ?? 0);
             $saldoCSR = (float)($saldo->saldo_csr ?? 0);
