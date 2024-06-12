@@ -17,7 +17,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class GenerateLaporanBulananPdfJob implements ShouldQueue
+class GenerateLaporanBulanan2MonthPdf implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -44,7 +44,7 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                 $jenis_laporan = "Bulanan";
                 // bulan laporan
 
-                $tahun = date('Y', strtotime('last month'));
+                $tahun = date('Y', strtotime('2 months ago'));
                 $months = [
                     'January' => 'Januari',
                     'February' => 'Februari',
@@ -59,12 +59,12 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                     'November' => 'November',
                     'December' => 'Desember'
                 ];
-                $bulan_laporan = $months[date('F', strtotime('last month'))];
+                $bulan_laporan = $months[date('F', strtotime('2 months ago'))];
                 // 
                 // LAPORAN SELISIH (laba-rugi)
                 $infak = Infak::whereBetween('created_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(), //Carbon::now()->startOfMonth()
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2), //Carbon::now()->startOfMonth()
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->sum('nominal');
                 // infak umum
                 $infak_umum = config('bwi.persentase_saldo_umum') * $infak / 100;
@@ -78,30 +78,30 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                 $infak_total = $infak;
                 // total cicilan
                 $cicilan = Cicilan::whereBetween('tanggal_bayar', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->where('status_cicilan', true)->sum('nominal_cicilan');
                 // total pinjaman
                 $pinjaman = Pinjaman::whereBetween('updated_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->where('acc_pinjaman', true)->sum('total_pinjaman');
                 // pengeluaran
 
                 // pengeluaran keamilan
                 $pengeluaran_keamilan = Pengeluaran::whereBetween('tanggal', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->where('jenis', 'Keamilan')->sum('nominal');
                 // pengeluaran sosial
                 $pengeluaran_sosial = Pengeluaran::whereBetween('tanggal', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->where('jenis', 'CSR')->sum('nominal');
                 // pengeluaran gagal bayar
                 $pengeluaran_cadangan = Pengeluaran::whereBetween('tanggal', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->where('cabang_id', $this->cabang_id)->where('jenis', 'Cadangan')->sum('nominal');
                 // total pengeluaran
                 $total_pengeluaran = $pengeluaran_keamilan + $pengeluaran_cadangan + $pengeluaran_sosial;
@@ -116,12 +116,12 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
 
                 // laporan posisi keuangan
                 $mutasi_last = Mutasi::where('cabang_id', $this->cabang_id)->whereBetween('created_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->orderBy('id', 'DESC')->first();
                 $mutasi_first = Mutasi::where('cabang_id', $this->cabang_id)->whereBetween('created_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
+                    Carbon::now()->startOfMonth()->subMonthsNoOverflow(2),
+                    Carbon::now()->endOfMonth()->subMonthsNoOverflow(2)
                 ])->orderBy('id', 'ASC')->first();
 
                 // saldo umum
@@ -204,7 +204,7 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                     'berkas' => $nama_file_laporan
                 ],[
                     'cabang_id' => $this->cabang_id,
-                    'tanggal' => date('Y-m-d', strtotime('last month')),
+                    'tanggal' => date('Y-m-d', strtotime('2 months ago')),
                     'jenis' => 'Laporan Bulanan',
                 ]);
     }

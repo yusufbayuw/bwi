@@ -12,6 +12,7 @@ use App\Models\Pinjaman;
 use App\Models\Pengeluaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Jobs\GenerateLaporanBulananPdfJob;
+use App\Jobs\GenerateLaporanBulanan2MonthPdf;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -28,6 +29,14 @@ class Kernel extends ConsoleKernel
 
             foreach ($cabangs as $key => $cabang_id) {
                 dispatch(new GenerateLaporanBulananPdfJob($cabang_id));
+            }
+        });
+
+        $schedule->call(function () {
+            $cabangs = Cabang::all()->pluck('id')->toArray();
+
+            foreach ($cabangs as $key => $cabang_id) {
+                dispatch(new GenerateLaporanBulanan2MonthPdf($cabang_id));
             }
         });
     }
