@@ -24,6 +24,16 @@ class LaporanResource extends Resource
 
     protected static ?string $slug = 'laporan';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $userAuth = auth()->user();
+        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
+            return parent::getEloquentQuery();
+        } else {
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+        }
+    }
+
     public static function form(Form $form): Form
     {
         return $form
