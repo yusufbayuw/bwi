@@ -198,7 +198,7 @@ class GenerateLaporanBulanan2MonthPdf implements ShouldQueue
                 
                 $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang', $data);
                 //dd(public_path('storage\\' . $nama_file_laporan));
-                $pdf->save(public_path('storage\\' . $nama_file_laporan)); //download('invoice.pdf');
+                $pdf->save(public_path('storage'. DIRECTORY_SEPARATOR . $nama_file_laporan)); //download('invoice.pdf');
                 
                 Laporan::updateOrCreate([
                     'berkas' => $nama_file_laporan
