@@ -28,9 +28,9 @@ class LaporanResource extends Resource
     {
         $userAuth = auth()->user();
         if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            return parent::getEloquentQuery();
+            return parent::getEloquentQuery()->orderBy('created_at', 'desc');
         } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
+            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id)->orderBy('created_at', 'desc');
         }
     }
 
