@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
-use Filament\Support\Assets\Css;
 use Filament\Support\Assets\Js;
-use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Assets\Css;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
+use Filament\Support\Facades\FilamentAsset;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,5 +29,8 @@ class AppServiceProvider extends ServiceProvider
             Css::make('custom-mobile', asset('css/custom.css')),
             Js::make('custom-mobile', asset('js/custom.js')),
         ]);
+        if (env('APP_ENV') === 'production') {
+            URL::forceSchema('https');
+        }
     }
 }
