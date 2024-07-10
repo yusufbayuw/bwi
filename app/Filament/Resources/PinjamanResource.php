@@ -218,7 +218,7 @@ class PinjamanResource extends Resource
                             ->inline()
                             ->required()
                             ->afterStateUpdated(function (Pinjaman $pinjaman, $state, Set $set) {
-                                if ($state) {
+                                if ($state === 1 || $state === '1') {
                                     $userIds = $pinjaman->list_anggota;
     
                                     $counterPinjaman = 0;
@@ -258,6 +258,8 @@ class PinjamanResource extends Resource
                                     } else {
                                         $set('status', 'Cicilan Berjalan');
                                     }
+                                } elseif ($state === -1 || $state === '-1') {
+                                    $set('status', 'Ditolak');
                                 }
                             })
                             //->afterStateUpdated(fn (Set $set, $state) => $state ? $set('status', 'Cicilan Berjalan') : '')
