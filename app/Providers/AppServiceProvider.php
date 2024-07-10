@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
             Js::make('custom-mobile', asset('js/custom.js')),
         ]);
         if (env('APP_ENV') === 'production') {
-            URL::forceSchema('https');
+            URL::forceScheme('https');
         }
     }
 }
