@@ -468,6 +468,7 @@ class PinjamanResource extends Resource
                             ->color(fn (string $state): string => match ($state) {
                                 '1' => 'success',
                                 '0' => 'danger',
+                                '-1' => 'warning',
                             }),
                     ]),
             ]);
