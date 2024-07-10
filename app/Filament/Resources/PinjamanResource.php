@@ -464,7 +464,7 @@ class PinjamanResource extends Resource
                         TextEntry::make('acc_pinjaman')
                             ->label('Persetujuan Pinjaman:')
                             ->badge()
-                            ->formatStateUsing(fn ($state) => $state ? 'DISETUJUI' : 'Belum/Tidak Disetujui')
+                            ->formatStateUsing(fn ($state) => ($state === 1) ? 'DISETUJUI' : ($state ? 'TIDAK DISETUJUI' : 'BELUM DITINDAKLANJUTI'))
                             ->color(fn (string $state): string => match ($state) {
                                 '1' => 'success',
                                 '0' => 'danger',
