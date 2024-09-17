@@ -35,7 +35,7 @@ class CicilanObserver
             $last_mutasi_csr = (float)($last_mutasi->saldo_csr ?? 0);
             $last_mutasi_cadangan = (float)($last_mutasi->saldo_cadangan ?? 0);
 
-            Mutasi::create([
+            Mutasi::firstOrCreate([
                 'cabang_id' => $cabang_id,
                 'cicilan_id' => $cicilan_id,
                 'kredit' => $nominal,
