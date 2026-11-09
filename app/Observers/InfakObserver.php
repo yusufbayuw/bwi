@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Infak;
 use App\Models\Mutasi;
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class InfakObserver
 {
@@ -85,6 +86,27 @@ class InfakObserver
                 'saldo_csr' => $mutasi_6,
                 'saldo_cadangan' => $mutasi_8,
                 'keterangan' => "Penambahan Saldo Cadangan (".config('bwi.persentase_saldo_cadangan')."%) Infak dari ".$user_infak,
+            ]);
+        }
+    }
+
+    /**
+     * A posted donation cannot be transferred to another branch.
+     */
+    public function updating(Infak $infak): void
+    {
+        if (Mutasi::where('infak_id', $infak->id)->exists() && $infak->isDirty('cabang_id')) {
+            throw ValidationException::withMessages([
+                'cabang_id' => 'Cabang infak yang sudah dibukukan tidak boleh diganti.',
+            ]);
+        }
+    }
+
+    public function deleting(Infak $infak): void
+    {
+        if (Mutasi::where('infak_id', $infak->id)->exists()) {
+            throw ValidationException::withMessages([
+                'nominal' => 'Infak yang sudah masuk mutasi tidak boleh dihapus tanpa koreksi keuangan.',
             ]);
         }
     }
@@ -204,23 +226,23 @@ class InfakObserver
             Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'infak_id' => $infak_id,
-                'debet' => $dana_csr,
+                'debet' => $dana_cadangan,
                 'saldo_umum' => $mutasi_2,
                 'saldo_keamilan' => $mutasi_4,
                 'saldo_csr' => $mutasi_6,
                 'saldo_cadangan' => $mutasi_7,
-                'keterangan' => "Perubahan Saldo Cadangan (".config('bwi.persentase_saldo_csr')."%) Infak dari ".$user_infak."(lama)",
+                'keterangan' => "Perubahan Saldo Cadangan (".config('bwi.persentase_saldo_cadangan')."%) Infak dari ".$user_infak."(lama)",
             ]);
 
             Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'infak_id' => $infak_id,
-                'kredit' => $dana_csr_akhir,
+                'kredit' => $dana_cadangan_akhir,
                 'saldo_umum' => $mutasi_2,
                 'saldo_keamilan' => $mutasi_4,
                 'saldo_csr' => $mutasi_6,
                 'saldo_cadangan' => $mutasi_8,
-                'keterangan' => "Perubahan Saldo Cadangan (".config('bwi.persentase_saldo_csr')."%) Infak dari ".$user_infak."(baru)",
+                'keterangan' => "Perubahan Saldo Cadangan (".config('bwi.persentase_saldo_cadangan')."%) Infak dari ".$user_infak."(baru)",
             ]);
         }
     }

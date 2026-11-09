@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Mutasi;
 use App\Models\Cicilan;
 use App\Models\Pinjaman;
+use Illuminate\Validation\ValidationException;
 
 class CicilanObserver
 {
@@ -18,10 +19,49 @@ class CicilanObserver
     }
 
     /**
+     * Paid installments cannot have their financial identity or amount changed.
+     */
+    public function updating(Cicilan $cicilan): void
+    {
+        if ((int) $cicilan->getOriginal('status_cicilan') !== 1) {
+            return;
+        }
+
+        foreach (['status_cicilan', 'nominal_cicilan', 'pinjaman_id', 'cabang_id', 'tagihan_ke', 'tanggal_cicilan', 'is_final'] as $field) {
+            if ($cicilan->isDirty($field)) {
+                throw ValidationException::withMessages([
+                    'status_cicilan' => 'Cicilan yang sudah dibukukan tidak dapat mengubah status atau data finansial.',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * No deletion of an installment within an approved loan.
+     */
+    public function deleting(Cicilan $cicilan): void
+    {
+        if (
+            Mutasi::where('cicilan_id', $cicilan->id)->exists()
+            || Pinjaman::whereKey($cicilan->pinjaman_id)->where('acc_pinjaman', 1)->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'status_cicilan' => 'Tagihan pinjaman yang sudah disetujui tidak boleh dihapus.',
+            ]);
+        }
+    }
+
+    /**
      * Handle the Cicilan "updated" event.
      */
     public function updated(Cicilan $cicilan): void
     {
+        // Post only on the first unpaid-to-paid transition.
+        if (! $cicilan->wasChanged('status_cicilan') || (int) $cicilan->status_cicilan !== 1
+            || Mutasi::where('cicilan_id', $cicilan->id)->exists()) {
+            return;
+        }
+
         $status = $cicilan->status_cicilan;
 
         if ($status) {
@@ -35,7 +75,7 @@ class CicilanObserver
             $last_mutasi_csr = (float)($last_mutasi->saldo_csr ?? 0);
             $last_mutasi_cadangan = (float)($last_mutasi->saldo_cadangan ?? 0);
 
-            Mutasi::firstOrCreate([
+            Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'cicilan_id' => $cicilan_id,
                 'kredit' => $nominal,
@@ -46,7 +86,7 @@ class CicilanObserver
                 'keterangan' => "Cicilan ke-" . $cicilan->tagihan_ke . " kelompok " . Pinjaman::find($cicilan->pinjaman_id)->nama_kelompok,
             ]);
 
-            if ($cicilan->is_final) {
+            if ($cicilan->is_final && ! Cicilan::where('pinjaman_id', $cicilan->pinjaman_id)->where('status_cicilan', false)->exists()) {
                 $lunas = Pinjaman::find($cicilan->pinjaman_id);
                 $lunas->status = "Lunas";
                 //is_organ adalah sudah lunas/belum

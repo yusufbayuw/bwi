@@ -7,6 +7,7 @@ use App\Models\Mutasi;
 use App\Models\Cicilan;
 use App\Models\Pinjaman;
 use Filament\Notifications\Notification;
+use Illuminate\Validation\ValidationException;
 
 class PinjamanObserver
 {
@@ -20,10 +21,43 @@ class PinjamanObserver
     }
 
     /**
+     * Once disbursed, terms may not be changed without a formal reversal.
+     */
+    public function updating(Pinjaman $pinjaman): void
+    {
+        if (! Mutasi::where('pinjaman_id', $pinjaman->id)->exists()) {
+            return;
+        }
+
+        foreach (['acc_pinjaman', 'cabang_id', 'nama_kelompok', 'jumlah_anggota', 'list_anggota', 'nominal_bmpa_max', 'nominal_pinjaman', 'total_pinjaman', 'lama_cicilan', 'cicilan_kelompok', 'tanggal_cicilan_pertama', 'nama_pengurus', 'dengan_pengurus'] as $field) {
+            if ($pinjaman->isDirty($field)) {
+                throw ValidationException::withMessages([
+                    'acc_pinjaman' => 'Pinjaman telah dibukukan dan tidak boleh diubah tanpa proses koreksi keuangan.',
+                ]);
+            }
+        }
+    }
+
+    public function deleting(Pinjaman $pinjaman): void
+    {
+        if (Mutasi::where('pinjaman_id', $pinjaman->id)->exists() || Cicilan::where('pinjaman_id', $pinjaman->id)->exists()) {
+            throw ValidationException::withMessages([
+                'acc_pinjaman' => 'Pinjaman yang sudah dicairkan atau memiliki tagihan tidak boleh dihapus.',
+            ]);
+        }
+    }
+
+    /**
      * Handle the Pinjaman "updated" event.
      */
     public function updated(Pinjaman $pinjaman): void
     {
+        // Prevent repeat disbursements or duplicate installment schedules.
+        if (! $pinjaman->wasChanged('acc_pinjaman') || (int) $pinjaman->acc_pinjaman !== 1
+            || Mutasi::where('pinjaman_id', $pinjaman->id)->exists()) {
+            return;
+        }
+
         //
         $totalPinjaman = (float)$pinjaman->total_pinjaman;
 
@@ -49,6 +83,12 @@ class PinjamanObserver
                 }
             }
 
+
+            if ($counterPinjaman > 0) {
+                throw ValidationException::withMessages([
+                    'acc_pinjaman' => 'Setiap anggota harus menyelesaikan kelompok pinjaman sebelumnya.',
+                ]);
+            }
 
             if ($counterPinjaman == 0) {
                 $pinjaman_id = $pinjaman->id;
