@@ -95,6 +95,10 @@ class InfakObserver
      */
     public function updating(Infak $infak): void
     {
+        if ($infak->isDirty('tanggal') && Mutasi::where('infak_id', $infak->id)->exists()) {
+            throw ValidationException::withMessages(['tanggal' => 'Tanggal transaksi yang sudah dibukukan tidak dapat diubah.']);
+        }
+
         if (Mutasi::where('infak_id', $infak->id)->exists() && $infak->isDirty('cabang_id')) {
             throw ValidationException::withMessages([
                 'cabang_id' => 'Cabang infak yang sudah dibukukan tidak boleh diganti.',

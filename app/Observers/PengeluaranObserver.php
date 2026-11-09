@@ -46,6 +46,10 @@ class PengeluaranObserver
 
     public function updating(Pengeluaran $pengeluaran): void
     {
+        if ($pengeluaran->isDirty('tanggal') && Mutasi::where('pengeluaran_id', $pengeluaran->id)->exists()) {
+            throw ValidationException::withMessages(['tanggal' => 'Tanggal transaksi yang sudah dibukukan tidak dapat diubah.']);
+        }
+
         if ($pengeluaran->isDirty('cabang_id') && Mutasi::where('pengeluaran_id', $pengeluaran->id)->exists()) {
             throw ValidationException::withMessages(['cabang_id' => 'Cabang transaksi yang sudah dibukukan tidak boleh diganti.']);
         }

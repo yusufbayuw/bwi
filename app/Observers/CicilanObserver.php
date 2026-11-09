@@ -27,7 +27,7 @@ class CicilanObserver
             return;
         }
 
-        foreach (['status_cicilan', 'nominal_cicilan', 'pinjaman_id', 'cabang_id', 'tagihan_ke', 'tanggal_cicilan', 'is_final'] as $field) {
+        foreach (['status_cicilan', 'nominal_cicilan', 'pinjaman_id', 'cabang_id', 'tagihan_ke', 'tanggal_cicilan', 'tanggal_bayar', 'is_final'] as $field) {
             if ($cicilan->isDirty($field)) {
                 throw ValidationException::withMessages([
                     'status_cicilan' => 'Cicilan yang sudah dibukukan tidak dapat mengubah status atau data finansial.',
