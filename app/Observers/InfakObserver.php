@@ -119,7 +119,7 @@ class InfakObserver
         $dana_awal = (float)$infak->getOriginal('nominal');
         $dana_akhir = (float)$infak->nominal;
 
-        if ($dana_akhir && ($dana_akhir != $dana_awal)) {
+        if ($dana_akhir != $dana_awal) {
             $infak_id = $infak->id;
             $cabang_id = $infak->cabang_id;
             $user_id = $infak->user_id ?? "";

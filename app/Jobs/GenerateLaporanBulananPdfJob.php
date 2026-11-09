@@ -82,10 +82,8 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                     Carbon::now()->endOfMonth()->subMonthNoOverflow()
                 ])->where('cabang_id', $this->cabang_id)->where('status_cicilan', true)->sum('nominal_cicilan');
                 // total pinjaman
-                $pinjaman = Pinjaman::whereBetween('updated_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
-                ])->where('cabang_id', $this->cabang_id)->where('acc_pinjaman', true)->sum('total_pinjaman');
+                $pinjaman = Mutasi::where('cabang_id', $this->cabang_id)->whereNotNull('pinjaman_id')
+                    ->whereBetween('created_at', [Carbon::now()->startOfMonth()->subMonthNoOverflow(), Carbon::now()->endOfMonth()->subMonthNoOverflow()])->sum('debet');
                 // pengeluaran
 
                 // pengeluaran keamilan
@@ -115,14 +113,10 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                 $keterangan = ($selisih > 0) ? "Surplus" : (($selisih < 0) ? "Defisit" : "Impas");
 
                 // laporan posisi keuangan
-                $mutasi_last = Mutasi::where('cabang_id', $this->cabang_id)->whereBetween('created_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
-                ])->orderBy('id', 'DESC')->first();
-                $mutasi_first = Mutasi::where('cabang_id', $this->cabang_id)->whereBetween('created_at', [
-                    Carbon::now()->startOfMonth()->subMonthNoOverflow(),
-                    Carbon::now()->endOfMonth()->subMonthNoOverflow()
-                ])->orderBy('id', 'ASC')->first();
+                $mutasi_last = Mutasi::where('cabang_id', $this->cabang_id)
+                    ->where('created_at', '<=', Carbon::now()->endOfMonth()->subMonthNoOverflow())->orderByDesc('id')->first();
+                $mutasi_first = Mutasi::where('cabang_id', $this->cabang_id)
+                    ->where('created_at', '<', Carbon::now()->startOfMonth()->subMonthNoOverflow())->orderByDesc('id')->first();
 
                 // saldo umum
                 $saldo_umum = $mutasi_last->saldo_umum ?? 0;
@@ -157,7 +151,7 @@ class GenerateLaporanBulananPdfJob implements ShouldQueue
                 $saldo_awal = ($mutasi_first->saldo_umum ?? 0) + ($mutasi_first->saldo_keamilan ?? 0) + ($mutasi_first->saldo_csr ?? 0) + ($mutasi_first->saldo_cadangan ?? 0);
                 // selisih
                 // posisi akhir
-                $saldo_akhir = $saldo_awal + $selisih;
+                $saldo_akhir = (float)($saldo_umum) + (float)($saldo_keamilan) + (float)($saldo_sosial) + (float)($saldo_cadangan);
                 // 
                
                 $data = [

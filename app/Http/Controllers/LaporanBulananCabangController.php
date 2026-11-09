@@ -71,10 +71,8 @@ class LaporanBulananCabangController extends Controller
             Carbon::now()->endOfMonth()
         ])->where('cabang_id', $cabang_id)->where('status_cicilan', true)->sum('nominal_cicilan');
         // total pinjaman
-        $pinjaman = Pinjaman::whereBetween('updated_at', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->sum('total_pinjaman');
+        $pinjaman = Mutasi::where('cabang_id', $cabang_id)->whereNotNull('pinjaman_id')
+            ->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->sum('debet');
         // pengeluaran
         
         // pengeluaran keamilan
@@ -104,14 +102,10 @@ class LaporanBulananCabangController extends Controller
         $keterangan = ($selisih > 0) ? "Surplus" : (($selisih < 0) ? "Defisit" : "Impas");
 
         // laporan posisi keuangan
-        $mutasi_last = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->orderBy('id', 'DESC')->first();
-        $mutasi_first = Mutasi::where('cabang_id', $cabang_id)->whereBetween('created_at', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->orderBy('id', 'ASC')->first();
+        $mutasi_last = Mutasi::where('cabang_id', $cabang_id)
+            ->where('created_at', '<=', Carbon::now()->endOfMonth())->orderByDesc('id')->first();
+        $mutasi_first = Mutasi::where('cabang_id', $cabang_id)
+            ->where('created_at', '<', Carbon::now()->startOfMonth())->orderByDesc('id')->first();
 
         // saldo umum
         $saldo_umum = $mutasi_last->saldo_umum ?? 0;
@@ -146,7 +140,7 @@ class LaporanBulananCabangController extends Controller
         $saldo_awal = ($mutasi_first->saldo_umum ?? 0) + ($mutasi_first->saldo_keamilan ?? 0) + ($mutasi_first->saldo_csr ?? 0) + ($mutasi_first->saldo_cadangan ?? 0);
         // selisih
         // posisi akhir
-        $saldo_akhir = $saldo_awal + $selisih;
+        $saldo_akhir = (float)($saldo_umum) + (float)($saldo_keamilan) + (float)($saldo_sosial) + (float)($saldo_cadangan);
         // 
 
         $data = [
