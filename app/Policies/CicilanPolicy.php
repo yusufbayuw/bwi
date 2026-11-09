@@ -10,6 +10,11 @@ class CicilanPolicy
 {
     use HandlesAuthorization;
 
+    private function inScope(User $user, Cicilan $cicilan): bool
+    {
+        return $user->hasRole(config('bwi.adminAccess')) || (int) $user->cabang_id === (int) $cicilan->cabang_id;
+    }
+
     /**
      * Determine whether the user can view any models.
      *
@@ -30,7 +35,7 @@ class CicilanPolicy
      */
     public function view(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('view_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('view_cicilan');
     }
 
     /**
@@ -53,7 +58,7 @@ class CicilanPolicy
      */
     public function update(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('update_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('update_cicilan');
     }
 
     /**
@@ -65,7 +70,7 @@ class CicilanPolicy
      */
     public function delete(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('delete_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('delete_cicilan');
     }
 
     /**
@@ -88,7 +93,7 @@ class CicilanPolicy
      */
     public function forceDelete(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('force_delete_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('force_delete_cicilan');
     }
 
     /**
@@ -111,7 +116,7 @@ class CicilanPolicy
      */
     public function restore(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('restore_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('restore_cicilan');
     }
 
     /**
@@ -134,7 +139,7 @@ class CicilanPolicy
      */
     public function replicate(User $user, Cicilan $cicilan): bool
     {
-        return $user->can('replicate_cicilan');
+        return $this->inScope($user, $cicilan) && $user->can('replicate_cicilan');
     }
 
     /**

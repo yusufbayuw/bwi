@@ -46,15 +46,15 @@ class CicilanResource extends Resource
 
     protected static ?string $slug = 'cicilan';
 
-    /* public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): Builder
     {
-        $userAuth = auth()->user();
-        if ($userAuth->hasRole(config('bwi.adminAccess'))) {
-            return parent::getEloquentQuery();
-        } else {
-            return parent::getEloquentQuery()->where('cabang_id', $userAuth->cabang_id);
-        }
-    } */
+        $user = auth()->user();
+        $query = parent::getEloquentQuery();
+
+        return $user && $user->hasRole(config('bwi.adminAccess'))
+            ? $query
+            : $query->where('cabang_id', $user?->cabang_id ?? -1);
+    }
 
     public static function form(Form $form): Form
     {

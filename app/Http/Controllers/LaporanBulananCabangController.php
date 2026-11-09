@@ -22,7 +22,11 @@ class LaporanBulananCabangController extends Controller
 
     public function laporanBulananCabang($cabang_id, $jenis)
     {
-        $cabang = Cabang::find($cabang_id);
+        $cabang = Cabang::findOrFail($cabang_id);
+        $user = auth()->user();
+        abort_unless($user && ($user->hasRole(config('bwi.adminAccess')) || (int) $user->cabang_id === (int) $cabang->id), 403);
+        abort_unless($user->can('view_any_laporan') || $user->can('view_laporan'), 403);
+        abort_unless(in_array($jenis, ['bulanan', 'Bulanan'], true), 404);
         // nama cabang
         $cabang_nama = $cabang->nama_cabang;
         // alamat cabang
@@ -180,6 +184,6 @@ class LaporanBulananCabangController extends Controller
         ];
 
         $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang', $data);
-        return $pdf->save(public_path('storage/'.$cabang_nama.'-Laporan '-$jenis_laporan.' '.$bulan_laporan.'.pdf')); //download('invoice.pdf');
+        return $pdf->stream('Laporan Bulanan - '. $bulan_laporan . '.pdf');
     }
 }
