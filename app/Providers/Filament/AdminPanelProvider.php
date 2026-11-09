@@ -39,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('images/brand.png'))
             ->brandLogoHeight('3rem')
             ->profile()
+            ->databaseTransactions()
             ->favicon(asset('images/favicon.png'))
             ->sidebarCollapsibleOnDesktop()
             ->colors([
