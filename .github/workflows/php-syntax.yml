@@ -20,3 +20,28 @@ jobs:
       - name: Check PHP syntax
         run: |
           find app routes config database tests -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+  
+  finance-regression:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan key:generate
+      - name: Run regression tests
+        run: php artisan test --no-ansi
