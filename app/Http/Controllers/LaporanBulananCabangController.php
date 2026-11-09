@@ -116,8 +116,8 @@ class LaporanBulananCabangController extends Controller
         // saldo cadangan
         $saldo_cadangan = $mutasi_last->saldo_cadangan ?? 0;
         // Piutang (anggota)
-        $pinjaman_berjalan_aktif = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', false)->get();
-        $pinjaman_berjalan = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', false)->sum('total_pinjaman');
+        $pinjaman_berjalan_aktif = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', 'Cicilan Berjalan')->get();
+        $pinjaman_berjalan = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', 'Cicilan Berjalan')->sum('total_pinjaman');
         $cicilan_berjalan = 0;
         foreach ($pinjaman_berjalan_aktif as $key => $value) {
             $cicilan_berjalan_aktif = Cicilan::where('cabang_id', $cabang_id)->where('pinjaman_id', $value->id)->where('status_cicilan', true)->sum('nominal_cicilan');

@@ -36,6 +36,21 @@ class PinjamanObserver
                 ]);
             }
         }
+
+        // Validate membership before saving approval, so a rejected approval does
+        // not leave the loan approved without its ledger entry.
+        if ($pinjaman->isDirty('acc_pinjaman') && (int) $pinjaman->acc_pinjaman === 1) {
+            $memberIds = collect($pinjaman->list_anggota ?? [])->pluck('user_id')->filter();
+            if ($pinjaman->nama_pengurus) {
+                $memberIds->push($pinjaman->nama_pengurus);
+            }
+
+            if ($memberIds->isEmpty() || User::whereIn('id', $memberIds->unique()->all())->where('is_kelompok', true)->exists()) {
+                throw ValidationException::withMessages([
+                    'acc_pinjaman' => 'Anggota atau pengurus masih memiliki pinjaman aktif, atau data anggota belum lengkap.',
+                ]);
+            }
+        }
     }
 
     public function deleting(Pinjaman $pinjaman): void
