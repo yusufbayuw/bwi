@@ -66,6 +66,13 @@ class BwiReportAndTransactionTest extends TestCase
 
         $this->actingAs($other)->get(route('bwi.laporan.download', ['laporan' => $report->id]))
             ->assertOk();
+
+        // Even an editable report row cannot reference another branch's file.
+        $otherPath = "bwi/reports/cabang-{$otherBranch->id}/2026-10.pdf";
+        Storage::disk('local')->put($otherPath, '%PDF-confidential');
+        $report->update(['berkas' => $otherPath]);
+        $this->actingAs($other)->get(route('bwi.laporan.download', ['laporan' => $report->id]))
+            ->assertForbidden();
     }
 
     public function test_monthly_report_generation_writes_to_private_storage_and_is_idempotent(): void
@@ -246,6 +253,31 @@ class BwiReportAndTransactionTest extends TestCase
             $this->assertSame(0, (int) $loan->fresh()->acc_pinjaman);
             $this->assertSame(0, Mutasi::where('pinjaman_id', $loan->id)->count());
         }
+    }
+
+
+    public function test_audit_detects_anomalies_without_altering_financial_records(): void
+    {
+        $branch = $this->branch();
+
+        $this->artisan('bwi:audit-ledger', ['--cabang' => $branch->id])
+            ->assertExitCode(0);
+
+        $count = Mutasi::count();
+        Mutasi::create([
+            'cabang_id' => $branch->id,
+            'kredit' => '500',
+            'saldo_umum' => '1000000',
+            'saldo_keamilan' => 0,
+            'saldo_csr' => 0,
+            'saldo_cadangan' => 0,
+            'keterangan' => 'Simulasi mutasi tidak konsisten',
+        ]);
+
+        $this->artisan('bwi:audit-ledger', ['--cabang' => $branch->id])
+            ->assertExitCode(1);
+
+        $this->assertSame($count + 1, Mutasi::count());
     }
 
 }
