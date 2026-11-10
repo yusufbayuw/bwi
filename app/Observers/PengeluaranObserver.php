@@ -31,7 +31,11 @@ class PengeluaranObserver
             $mutasi_6 = ($jenis === "CSR") ? $last_mutasi_csr - $pengeluaran_nominal : $last_mutasi_csr;
             $mutasi_8 = ($jenis === "Cadangan") ? $last_mutasi_cadangan - $pengeluaran_nominal : $last_mutasi_cadangan;
 
-            if ($pengeluaran_nominal <= 0 || min($mutasi_2, $mutasi_4, $mutasi_6, $mutasi_8) < -0.01) {
+            if ($pengeluaran_nominal <= 0 || (($jenis === 'Umum' && $mutasi_2 < -0.01)
+                || ($jenis === 'Keamilan' && $mutasi_4 < -0.01)
+                || ($jenis === 'CSR' && $mutasi_6 < -0.01)
+                || ($jenis === 'Cadangan' && $mutasi_8 < -0.01)
+                || !in_array($jenis, ['Umum', 'Keamilan', 'CSR', 'Cadangan'], true))) {
                 throw ValidationException::withMessages([
                     'nominal' => 'Saldo dana tidak cukup atau nominal pengeluaran tidak valid.',
                 ]);
@@ -101,7 +105,7 @@ class PengeluaranObserver
             $restored = $balances;
             $balances[$jenis] -= $pengeluaran_nominal;
 
-            if ($pengeluaran_nominal <= 0 || min($balances) < -0.01) {
+            if ($pengeluaran_nominal <= 0 || $balances[$jenis] < -0.01) {
                 throw ValidationException::withMessages([
                     'nominal' => 'Saldo dana tidak cukup untuk koreksi pengeluaran ini.',
                 ]);

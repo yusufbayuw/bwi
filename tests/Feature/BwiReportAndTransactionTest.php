@@ -51,8 +51,11 @@ class BwiReportAndTransactionTest extends TestCase
         $this->get(route('bwi.laporan.download', ['laporan' => $report->id]))
             ->assertRedirect();
 
+        $otherBranch = Cabang::create([
+            'nama_cabang' => 'Cabang Lain', 'saldo_awal' => '0',
+        ]);
         $other = User::factory()->create();
-        $other->forceFill(['cabang_id' => $branch->id + 1])->save();
+        $other->forceFill(['cabang_id' => $otherBranch->id])->save();
         $this->actingAs($other)->get(route('bwi.laporan.download', ['laporan' => $report->id]))
             ->assertForbidden();
 
