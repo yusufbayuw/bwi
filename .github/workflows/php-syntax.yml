@@ -94,5 +94,6 @@ jobs:
         run: php artisan test --testsuite=Feature --no-ansi
       - name: Verify truly parallel approvals against disposable MySQL
         run: |
+          php -r 'if (getenv("DB_CONNECTION") !== "mysql" || getenv("DB_HOST") !== "127.0.0.1" || getenv("DB_DATABASE") !== "bwi_testing") { fwrite(STDERR, "REFUSED: unsafe database target\n"); exit(2); }'
           php artisan migrate:fresh --force
           php tests/Integration/mysql_parallel_approvals.php

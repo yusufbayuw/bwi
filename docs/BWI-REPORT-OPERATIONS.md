@@ -63,3 +63,45 @@ sebagai stale edit agar tidak terjadi koreksi saldo berulang.
 Operasi update/delete massal langsung melalui Query Builder, SQL manual,
 dan pemrosesan di luar Eloquent tidak mengeksekusi observer/trait. Jangan
 gunakan jalur tersebut untuk perubahan keuangan.
+
+
+## Arsip laporan bulanan dan kewenangan
+
+- Laporan otomatis, termasuk arsip bulanan lama, tidak bisa dibuat, diedit, atau
+  dihapus melalui Filament maupun penyimpanan Eloquent biasa.
+- Pengguna tetap mengunduh laporan melalui tautan yang memeriksa identitas, izin,
+  dan cabang. Hak atas file juga diperiksa terhadap lokasi PDF privat.
+- Laporan non-otomatis tetap dapat diedit sesuai policy. Tindakan penghapusan
+  banyak laporan sekaligus dinonaktifkan agar arsip tidak terhapus tanpa sengaja.
+- Hanya service generator dan command migrasi yang secara eksplisit melakukan
+  penulisan internal ke arsip melalui Laporan::withoutEvents().
+- Operasi SQL manual/Query Builder yang tidak mengeksekusi model events berada
+  di luar pengamanan ini. Batasi akses SQL production dan lakukan backup rutin.
+
+## Verifikasi akhir sebelum menilai kesiapan merge/deploy
+
+GitHub Actions pada PR memeriksa PHP lint, PHPUnit pada SQLite serta MySQL 8,
+dan tes dua proses persetujuan pinjaman yang benar-benar bersaing pada cabang
+sama melalui dua koneksi MySQL independen. Tes paralel harus mencatat tepat satu
+approval, satu penolakan, satu pencairan, dan saldo yang tersisa.
+
+**Audit histori yang sebenarnya belum dapat diwakili tes data sintetis.**
+Sebelum GO-LIVE, pada salinan terbaru database production dengan data identitas
+disamarkan jika diekspor, jalankan:
+
+    php artisan bwi:audit-ledger --json > audit-ledger.json
+    php artisan bwi:audit-ledger --as-of=2026-10-31
+
+Audit tidak memperbaiki data, memutasi saldo, atau mencairkan pinjaman.
+Jika ada anomali, lakukan investigasi untuk tiap cabang pada salinan database;
+jangan membuat mutasi koreksi massal tanpa persetujuan akuntansi.
+
+Migrasi file laporan bersifat operasi production yang terpisah dari merge kode.
+Hanya jalankan bwi:secure-reports --execute setelah backup database dan
+penyimpanan file diverifikasi. Pastikan web server/CDN tidak lagi menyajikan PDF
+lama melalui URL publik.
+
+**Catatan keamanan:** tests/Integration/mysql_parallel_approvals.php sengaja hanya
+mengizinkan koneksi ke MySQL lokal bernama bwi_testing, dan digunakan setelah
+migrate:fresh khusus database CI. Jangan pernah menjalankannya di server
+operasional.
