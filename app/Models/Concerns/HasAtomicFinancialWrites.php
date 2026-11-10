@@ -31,6 +31,30 @@ trait HasAtomicFinancialWrites
         });
     }
 
+    /**
+     * Eloquent may keep booleans as true/false before the first refresh,
+     * while PDO returns the same database values as 1/0 or "1"/"0".
+     * Compare the persisted meaning, not PHP scalar identity.
+     */
+    private function samePersistedValue(mixed $original, mixed $stored): bool
+    {
+        if ($original === $stored) {
+            return true;
+        }
+
+        if (is_bool($original) && (is_numeric($stored) || is_bool($stored))) {
+            return (int) $original === (int) $stored;
+        }
+
+        if (is_bool($stored) && (is_numeric($original) || is_bool($original))) {
+            return (int) $original === (int) $stored;
+        }
+
+        return $original !== null && $stored !== null
+            && is_scalar($original) && is_scalar($stored)
+            && (string) $original === (string) $stored;
+    }
+
     private function lockFinancialScope(): void
     {
         $branchIds = $this instanceof Cabang
@@ -55,7 +79,10 @@ trait HasAtomicFinancialWrites
             // Reject a stale edited row instead of calculating a correction
             // from values that changed in another browser/request.
             foreach (array_keys($this->getDirty()) as $field) {
-                if ($this->getRawOriginal($field) !== $current->getRawOriginal($field)) {
+                if (! $this->samePersistedValue(
+                    $this->getRawOriginal($field),
+                    $current->getRawOriginal($field)
+                )) {
                     throw ValidationException::withMessages([
                         $field => 'Data telah berubah oleh proses lain. Muat ulang sebelum menyimpan.',
                     ]);
