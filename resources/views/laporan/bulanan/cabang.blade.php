@@ -84,12 +84,12 @@
 
           <div>
               <div>
-                  <h2 style="text-align: left;">1. Laporan Selisih (Laba-Rugi)</h2>
+                  <h2 style="text-align: left;">1. Rekap Arus Dana (bukan laporan laba-rugi)</h2>
               </div>
               <div>
                   <table>
                       <tr>
-                          <th colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">PENDAPATAN</th>
+                          <th colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS MASUK</th>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bold;">Infaq</td>
@@ -122,7 +122,7 @@
                           <td style="text-align: right;">{{ $cicilan }}</td>
                       </tr>
                       <tr>
-                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">BEBAN</td>
+                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS KELUAR</td>
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bold;">Pinjaman</td>
@@ -133,6 +133,10 @@
                       </tr>
                       <tr>
                           <td colspan="2" style="font-weight: bold;">Pengeluaran</td>
+                      </tr>
+                      <tr>
+                          <td>&nbsp;&nbsp;&nbsp;Pengeluaran Umum</td>
+                          <td style="text-align: right;">{{ $pengeluaran_umum }}</td>
                       </tr>
                       <tr>
                           <td>&nbsp;&nbsp;&nbsp;Pengeluaran Keamilan</td>
@@ -151,14 +155,14 @@
                           <td style="text-align: right;">{{ $total_pengeluaran }}</td>
                       </tr>
                       <tr>
-                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">SELISIH</td>
+                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS KAS BERSIH</td>
                       </tr>
                       <tr>
-                          <td>Total Pendapatan</td>
+                          <td>Total Arus Masuk</td>
                           <td style="text-align: right;">{{ $total_pendapatan }}</td>
                       </tr>
                       <tr>
-                          <td>Total Beban</td>
+                          <td>Total Arus Keluar</td>
                           <td style="text-align: right;">{{ $total_beban }}</td>
                       </tr>
                       <tr>
@@ -182,7 +186,7 @@
               <div>
                   <table>
                       <tr>
-                          <th colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">PENDAPATAN</th>
+                          <th colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS MASUK</th>
                       </tr>
                       <tr>
                           <td>Total Infaq</td>
@@ -193,11 +197,11 @@
                           <td style="text-align: right;">{{ $total_cicilan }}</td>
                       </tr>
                       <tr>
-                          <td>Total Pendapatan</td>
+                          <td>Total Arus Masuk</td>
                           <td style="text-align: right;">{{ $total_pendapatan }}</td>
                       </tr>
                       <tr>
-                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">BEBAN</td>
+                          <td colspan="2" style="font-weight: bolder; border-top: 1px solid black; border-bottom: 1px solid black; text-align: center;">ARUS KELUAR</td>
                       </tr>
                       <tr>
                           <td>Total Pinjaman</td>
@@ -208,7 +212,7 @@
                           <td style="text-align: right;">{{ $total_pengeluaran }}</td>
                       </tr>
                       <tr>
-                          <td>Total Beban</td>
+                          <td>Total Arus Keluar</td>
                           <td style="text-align: right;">{{ $total_beban }}</td>
                       </tr>
                       <tr>
@@ -219,8 +223,12 @@
                           <td style="text-align: right;">{{ $saldo_awal }}</td>
                       </tr>
                       <tr>
-                          <td>Selisih</td>
+                          <td>Arus Kas Bersih</td>
                           <td style="text-align: right;">{{ $selisih }}</td>
+                      </tr>
+                      <tr>
+                          <td>Modal Awal &amp; Penyesuaian Lain</td>
+                          <td style="text-align: right;">{{ $penyesuaian }}</td>
                       </tr>
                       <tr>
                           <td>Posisi Akhir</td>
@@ -260,7 +268,7 @@
                           <td style="text-align: right;">{{ $saldo_cadangan }}</td>
                       </tr>
                       <tr>
-                          <td>Hutang Anggota</td>
+                          <td>Piutang Anggota</td>
                           <td style="text-align: right;">{{ $piutang }}</td>
                       </tr>
                       <tr>
