@@ -201,4 +201,48 @@ class BwiReportAndTransactionTest extends TestCase
             $this->assertSame($before, Mutasi::where('cabang_id', $branch->id)->count());
         }
     }
+
+    public function test_expense_overdraw_is_rejected_even_without_ui_validation(): void
+    {
+        $branch = $this->branch();
+        $before = Mutasi::where('cabang_id', $branch->id)->count();
+
+        try {
+            Pengeluaran::create([
+                'cabang_id' => $branch->id,
+                'jenis' => 'Keamilan',
+                'nominal' => '9999',
+                'tanggal' => '2026-11-01',
+                'keterangan' => 'Percobaan saldo kurang',
+            ]);
+            $this->fail('Insufficient funds must be rejected in the backend.');
+        } catch (ValidationException $exception) {
+            $this->assertSame($before, Mutasi::where('cabang_id', $branch->id)->count());
+            $this->assertSame(0, Pengeluaran::where('cabang_id', $branch->id)->count());
+        }
+    }
+
+    public function test_loan_approval_with_no_members_is_rejected_before_posting(): void
+    {
+        $branch = $this->branch();
+        $loan = Pinjaman::create([
+            'cabang_id' => $branch->id,
+            'nama_kelompok' => 'Kelompok Kosong',
+            'status' => 'Menunggu Verifikasi',
+            'acc_pinjaman' => 0,
+            'list_anggota' => [],
+            'total_pinjaman' => '1000',
+            'lama_cicilan' => 5,
+            'tanggal_cicilan_pertama' => '2026-11-18',
+        ]);
+
+        try {
+            $loan->update(['acc_pinjaman' => 1]);
+            $this->fail('Missing loan members should fail before disbursement.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(0, (int) $loan->fresh()->acc_pinjaman);
+            $this->assertSame(0, Mutasi::where('pinjaman_id', $loan->id)->count());
+        }
+    }
+
 }

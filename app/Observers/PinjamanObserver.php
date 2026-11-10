@@ -25,21 +25,28 @@ class PinjamanObserver
      */
     public function updating(Pinjaman $pinjaman): void
     {
-        if (! Mutasi::where('pinjaman_id', $pinjaman->id)->exists()) {
-            return;
-        }
-
-        foreach (['acc_pinjaman', 'cabang_id', 'nama_kelompok', 'jumlah_anggota', 'list_anggota', 'nominal_bmpa_max', 'nominal_pinjaman', 'total_pinjaman', 'lama_cicilan', 'cicilan_kelompok', 'tanggal_cicilan_pertama', 'nama_pengurus', 'dengan_pengurus'] as $field) {
-            if ($pinjaman->isDirty($field)) {
-                throw ValidationException::withMessages([
-                    'acc_pinjaman' => 'Pinjaman telah dibukukan dan tidak boleh diubah tanpa proses koreksi keuangan.',
-                ]);
+        if (Mutasi::where('pinjaman_id', $pinjaman->id)->exists()) {
+            foreach (['acc_pinjaman', 'cabang_id', 'nama_kelompok', 'jumlah_anggota', 'list_anggota', 'nominal_bmpa_max', 'nominal_pinjaman', 'total_pinjaman', 'lama_cicilan', 'cicilan_kelompok', 'tanggal_cicilan_pertama', 'nama_pengurus', 'dengan_pengurus'] as $field) {
+                if ($pinjaman->isDirty($field)) {
+                    throw ValidationException::withMessages([
+                        'acc_pinjaman' => 'Pinjaman telah dibukukan dan tidak boleh diubah tanpa proses koreksi keuangan.',
+                    ]);
+                }
             }
         }
 
         // Validate membership before saving approval, so a rejected approval does
         // not leave the loan approved without its ledger entry.
         if ($pinjaman->isDirty('acc_pinjaman') && (int) $pinjaman->acc_pinjaman === 1) {
+            $available = (float) (Mutasi::where('cabang_id', $pinjaman->cabang_id)
+                ->orderByDesc('id')->value('saldo_umum') ?? 0);
+            $amount = (float) $pinjaman->total_pinjaman;
+            if ($amount <= 0 || $amount > $available + 0.01) {
+                throw ValidationException::withMessages([
+                    'total_pinjaman' => 'Dana umum tidak cukup untuk menyetujui pinjaman ini.',
+                ]);
+            }
+
             $memberIds = collect($pinjaman->list_anggota ?? [])->pluck('user_id')->filter();
             if ($pinjaman->nama_pengurus) {
                 $memberIds->push($pinjaman->nama_pengurus);

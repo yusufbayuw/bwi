@@ -31,6 +31,12 @@ class PengeluaranObserver
             $mutasi_6 = ($jenis === "CSR") ? $last_mutasi_csr - $pengeluaran_nominal : $last_mutasi_csr;
             $mutasi_8 = ($jenis === "Cadangan") ? $last_mutasi_cadangan - $pengeluaran_nominal : $last_mutasi_cadangan;
 
+            if ($pengeluaran_nominal <= 0 || min($mutasi_2, $mutasi_4, $mutasi_6, $mutasi_8) < -0.01) {
+                throw ValidationException::withMessages([
+                    'nominal' => 'Saldo dana tidak cukup atau nominal pengeluaran tidak valid.',
+                ]);
+            }
+
             Mutasi::create([
                 'cabang_id' => $cabang_id,
                 'pengeluaran_id' => $pengeluaran_id,
@@ -94,6 +100,12 @@ class PengeluaranObserver
             $balances[$jenis_lama] += $pengeluaran_nominal_lama;
             $restored = $balances;
             $balances[$jenis] -= $pengeluaran_nominal;
+
+            if ($pengeluaran_nominal <= 0 || min($balances) < -0.01) {
+                throw ValidationException::withMessages([
+                    'nominal' => 'Saldo dana tidak cukup untuk koreksi pengeluaran ini.',
+                ]);
+            }
 
             $snapshot = fn (array $values) => [
                 'saldo_umum' => $values['Umum'],
