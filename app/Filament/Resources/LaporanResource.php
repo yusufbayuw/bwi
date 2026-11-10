@@ -67,7 +67,7 @@ class LaporanResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('berkas')
                     ->formatStateUsing(fn ($state) => (explode('.', $state)[1] ?? 'file'))
-                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true),
+                    ->url(fn (Laporan $record) => route('bwi.laporan.download', ['laporan' => $record->id]), true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -81,12 +81,12 @@ class LaporanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Laporan $record): bool => ! $record->isSystemGenerated()),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Bulk removal of generated reports is forbidden.
+                // Non-generated records can still use the existing edit screen.
             ]);
     }
 

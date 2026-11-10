@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAtomicFinancialWrites;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Cabang extends Model
 {
+    use HasAtomicFinancialWrites;
+
     protected $casts = [
         'anggota_pembina' => 'json',
         'anggota_pengawas' => 'json',

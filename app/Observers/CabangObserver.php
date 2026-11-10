@@ -5,6 +5,12 @@ namespace App\Observers;
 use App\Models\Cabang;
 use App\Models\Mutasi;
 use App\Models\User;
+use App\Models\Infak;
+use App\Models\Pinjaman;
+use App\Models\Cicilan;
+use App\Models\Pengeluaran;
+use App\Models\Laporan;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class CabangObserver //implements ShouldHandleEventsAfterCommit
@@ -205,6 +211,26 @@ class CabangObserver //implements ShouldHandleEventsAfterCommit
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Prevent database cascades from silently removing the branch's financial history.
+     */
+    public function deleting(Cabang $cabang): void
+    {
+        if (
+            Mutasi::where('cabang_id', $cabang->id)->exists()
+            || Infak::where('cabang_id', $cabang->id)->exists()
+            || Pengeluaran::where('cabang_id', $cabang->id)->exists()
+            || Pinjaman::where('cabang_id', $cabang->id)->exists()
+            || Cicilan::where('cabang_id', $cabang->id)->exists()
+            || Laporan::where('cabang_id', $cabang->id)->exists()
+            || User::where('cabang_id', $cabang->id)->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'nama_cabang' => 'Cabang yang masih mempunyai anggota, transaksi, atau laporan tidak boleh dihapus.',
+            ]);
         }
     }
 

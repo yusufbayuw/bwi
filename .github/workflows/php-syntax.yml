@@ -1,0 +1,99 @@
+name: PHP syntax check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Check PHP syntax
+        run: |
+          find app routes config database tests -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+  
+  finance-regression:
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan key:generate
+      - name: Check scheduler bootstrap and monthly report jobs
+        run: |
+          php artisan schedule:list | tee /tmp/bwi-schedule.txt
+          grep -q 'bwi-laporan-bulan-sebelumnya' /tmp/bwi-schedule.txt
+          grep -q 'bwi-laporan-dua-bulan-sebelumnya' /tmp/bwi-schedule.txt
+      - name: Run regression tests
+        run: php artisan test --no-ansi
+  
+  finance-mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bwi_testing
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: bwi_testing
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: mbstring,dom,xml,pdo_mysql,bcmath,gd,zip
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan key:generate
+      - name: Run MySQL integration tests
+        run: php artisan test --testsuite=Feature --no-ansi
+      - name: Verify truly parallel approvals against disposable MySQL
+        run: |
+          php -r 'if (getenv("DB_CONNECTION") !== "mysql" || getenv("DB_HOST") !== "127.0.0.1" || getenv("DB_DATABASE") !== "bwi_testing") { fwrite(STDERR, "REFUSED: unsafe database target\n"); exit(2); }'
+          php artisan migrate:fresh --force
+          php tests/Integration/mysql_parallel_approvals.php
