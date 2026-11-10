@@ -71,7 +71,7 @@ class BwiReportAndTransactionTest extends TestCase
         Storage::fake('public');
         $branch = $this->branch();
 
-        $pdf = Mockery::mock();
+        $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
         $pdf->shouldReceive('output')->twice()->andReturn('%PDF-private');
         Pdf::shouldReceive('loadView')->twice()->andReturn($pdf);
 
@@ -194,8 +194,11 @@ class BwiReportAndTransactionTest extends TestCase
         $donation->update(['nominal' => '2000']);
         $before = Mutasi::where('cabang_id', $branch->id)->count();
 
-        $this->expectException(ValidationException::class);
-        $stale->update(['nominal' => '1500']);
-        $this->assertSame($before, Mutasi::where('cabang_id', $branch->id)->count());
+        try {
+            $stale->update(['nominal' => '1500']);
+            $this->fail('A stale edit should be rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertSame($before, Mutasi::where('cabang_id', $branch->id)->count());
+        }
     }
 }
