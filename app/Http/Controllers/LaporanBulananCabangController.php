@@ -2,182 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Infak;
 use App\Models\Cabang;
-use App\Models\Cicilan;
-use App\Models\Mutasi;
-use App\Models\Pengeluaran;
-use App\Models\Pinjaman;
-use Illuminate\Http\Request;
+use App\Models\Laporan;
+use App\Services\BwiMonthlyReport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LaporanBulananCabangController extends Controller
 {
-    public function generatePDF()
+    private function authorizeBranch(Request $request, int $branchId): void
     {
-        $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang');
-        return $pdf->stream(); //download('invoice.pdf');
+        $user = $request->user();
+        abort_unless($user && (
+            $user->hasRole(config('bwi.adminAccess'))
+            || (int) $user->cabang_id === $branchId
+        ), 403);
+        abort_unless(
+            $user->can('view_any_laporan') || $user->can('view_laporan'),
+            403
+        );
     }
 
-    public function laporanBulananCabang($cabang_id, $jenis)
+    public function laporanBulananCabang(
+        Request $request,
+        int $cabang_id,
+        string $jenis,
+        BwiMonthlyReport $reports
+    ) {
+        abort_unless(strtolower($jenis) === 'bulanan', 404);
+        $branch = Cabang::findOrFail($cabang_id);
+        $this->authorizeBranch($request, (int) $branch->id);
+
+        $month = CarbonImmutable::now('Asia/Jakarta')->startOfMonth();
+        return Pdf::loadView('laporan.bulanan.cabang', $reports->viewData($branch, $month))
+            ->stream('Laporan-'.$month->format('Y-m').'.pdf');
+    }
+
+    public function download(Request $request, Laporan $laporan)
     {
-        $cabang = Cabang::findOrFail($cabang_id);
-        $user = auth()->user();
-        abort_unless($user && ($user->hasRole(config('bwi.adminAccess')) || (int) $user->cabang_id === (int) $cabang->id), 403);
-        abort_unless($user->can('view_any_laporan') || $user->can('view_laporan'), 403);
-        abort_unless(in_array($jenis, ['bulanan', 'Bulanan'], true), 404);
-        // nama cabang
-        $cabang_nama = $cabang->nama_cabang;
-        // alamat cabang
-        $cabang_alamat = $cabang->lokasi;
-        // jenis laporan
-        $jenis_laporan = "Bulanan";
-        // bulan laporan
-        $months = [
-            'January' => 'Januari',
-            'February' => 'Februari',
-            'March' => 'Maret',
-            'April' => 'April',
-            'May' => 'Mei',
-            'June' => 'Juni',
-            'July' => 'Juli',
-            'August' => 'Agustus',
-            'September' => 'September',
-            'October' => 'Oktober',
-            'November' => 'November',
-            'December' => 'Desember'
-        ];
-        $bulan_laporan = $months[date('F')];
-        // 
-        // LAPORAN SELISIH (laba-rugi)
-        $infak = Infak::whereBetween('created_at', [
-                Carbon::now()->startOfMonth(), //Carbon::now()->startOfMonth()
-                Carbon::now()->endOfMonth()
-            ])->where('cabang_id', $cabang_id)->sum('nominal');
-        // infak umum
-        $infak_umum = config('bwi.persentase_saldo_umum') * $infak / 100;
-        // infak keamilan
-        $infak_keamilan = config('bwi.persentase_saldo_keamilan') * $infak / 100;
-        // infak sosial
-        $infak_sosial = config('bwi.persentase_saldo_csr') * $infak / 100;
-        // infak cadangan
-        $infak_cadangan = config('bwi.persentase_saldo_cadangan') * $infak / 100;
-        // total infak
-        $infak_total = $infak;
-        // total cicilan
-        $cicilan = Cicilan::whereBetween('tanggal_bayar', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id)->where('status_cicilan', true)->sum('nominal_cicilan');
-        // total pinjaman
-        $pinjaman = Mutasi::where('cabang_id', $cabang_id)->whereNotNull('pinjaman_id')
-            ->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->sum('debet');
-        // pengeluaran
-        
-        // pengeluaran keamilan
-        $pengeluaran_keamilan = Pengeluaran::whereBetween('tanggal', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id)->where('jenis', 'Keamilan')->sum('nominal');
-        // pengeluaran sosial
-        $pengeluaran_sosial = Pengeluaran::whereBetween('tanggal', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id)->where('jenis', 'CSR')->sum('nominal');
-        // pengeluaran gagal bayar
-        $pengeluaran_cadangan = Pengeluaran::whereBetween('tanggal', [
-            Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
-        ])->where('cabang_id', $cabang_id)->where('jenis', 'Cadangan')->sum('nominal');
-        // total pengeluaran
-        $total_pengeluaran = $pengeluaran_keamilan + $pengeluaran_cadangan + $pengeluaran_sosial;
-        // total pendapatan
-        $total_pendapatan = $infak_total + $cicilan;
-        // total beban
-        $total_beban = $pinjaman + $total_pengeluaran;
-        // selisih
-        $selisih = $total_pendapatan - $total_beban;
-        // keterangan surplus/defisit
-        $keterangan = ($selisih > 0) ? "Surplus" : (($selisih < 0) ? "Defisit" : "Impas");
+        $this->authorizeBranch($request, (int) $laporan->cabang_id);
+        $path = (string) $laporan->berkas;
 
-        // laporan posisi keuangan
-        $mutasi_last = Mutasi::where('cabang_id', $cabang_id)
-            ->where('created_at', '<=', Carbon::now()->endOfMonth())->orderByDesc('id')->first();
-        $mutasi_first = Mutasi::where('cabang_id', $cabang_id)
-            ->where('created_at', '<', Carbon::now()->startOfMonth())->orderByDesc('id')->first();
-
-        // saldo umum
-        $saldo_umum = $mutasi_last->saldo_umum ?? 0;
-        // saldo keamilan
-        $saldo_keamilan = $mutasi_last->saldo_keamilan ?? 0;
-        // saldo sosial
-        $saldo_sosial = $mutasi_last->saldo_csr ?? 0;
-        // saldo cadangan
-        $saldo_cadangan = $mutasi_last->saldo_cadangan ?? 0;
-        // Piutang (anggota)
-        $pinjaman_berjalan_aktif = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', 'Cicilan Berjalan')->get();
-        $pinjaman_berjalan = Pinjaman::where('cabang_id', $cabang_id)->where('acc_pinjaman', true)->where('status', 'Cicilan Berjalan')->sum('total_pinjaman');
-        $cicilan_berjalan = 0;
-        foreach ($pinjaman_berjalan_aktif as $key => $value) {
-            $cicilan_berjalan_aktif = Cicilan::where('cabang_id', $cabang_id)->where('pinjaman_id', $value->id)->where('status_cicilan', true)->sum('nominal_cicilan');
-            $cicilan_berjalan += $cicilan_berjalan_aktif;
+        if (preg_match('#^bwi/reports/(?:cabang-[0-9]+|legacy)/[A-Za-z0-9_.-]+\.pdf$#i', $path)) {
+            abort_unless(Storage::disk('local')->exists($path), 404);
+            return Storage::disk('local')->response($path, basename($path), [
+                'Content-Type' => 'application/pdf',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
         }
-        $piutang = $pinjaman_berjalan - $cicilan_berjalan;
-        // total asset
-        $total_asset = $saldo_umum + $saldo_keamilan + $saldo_sosial + $saldo_cadangan + $piutang;
 
-        // laporan arus kas
-        // total infak
-        $total_infak = $infak_total;
-        // total cicilan
-        $total_cicilan = $cicilan;
-        // total pendapatan
-        // total pinjaman
-        $total_pinjaman = $pinjaman;
-        // total pengeluaran
-        // posisi awal
-        $saldo_awal = ($mutasi_first->saldo_umum ?? 0) + ($mutasi_first->saldo_keamilan ?? 0) + ($mutasi_first->saldo_csr ?? 0) + ($mutasi_first->saldo_cadangan ?? 0);
-        // selisih
-        // posisi akhir
-        $saldo_akhir = (float)($saldo_umum) + (float)($saldo_keamilan) + (float)($saldo_sosial) + (float)($saldo_cadangan);
-        // 
-
-        $data = [
-            'cabang_nama' => $cabang_nama,
-            'cabang_alamat' => $cabang_alamat,
-            'jenis_laporan' => ucwords(strtolower($jenis_laporan)),
-            'bulan_laporan' => $bulan_laporan,
-            'infak_umum' => number_format($infak_umum, 2, ",", "."),
-            'infak_keamilan' => number_format($infak_keamilan, 2, ",", "."),
-            'infak_sosial' => number_format($infak_sosial, 2, ",", "."),
-            'infak_cadangan' => number_format($infak_cadangan, 2, ",", "."),
-            'cicilan' => number_format($cicilan, 2, ",", "."),
-            'pinjaman' => number_format($pinjaman, 2, ",", "."),
-            'pengeluaran_keamilan' => number_format($pengeluaran_keamilan, 2, ",", "."),
-            'pengeluaran_sosial' => number_format($pengeluaran_sosial, 2, ",", "."),
-            'pengeluaran_cadangan' => number_format($pengeluaran_cadangan, 2, ",", "."),
-            'total_pengeluaran' => number_format($total_pengeluaran, 2, ",", "."),
-            'total_pendapatan' => number_format($total_pendapatan, 2, ",", "."),
-            'total_beban' => number_format($total_beban, 2, ",", "."),
-            'selisih' => number_format($selisih, 2, ",", "."),
-            'keterangan' => $keterangan,
-            'saldo_umum' => number_format($saldo_umum, 2, ",", "."),
-            'saldo_keamilan' => number_format($saldo_keamilan, 2, ",", "."),
-            'saldo_sosial' => number_format($saldo_sosial, 2, ",", "."),
-            'saldo_cadangan' => number_format($saldo_cadangan, 2, ",", "."),
-            'pinjaman_berjalan' => number_format($pinjaman_berjalan, 2, ",", "."),
-            'cicilan_berjalan' => number_format($cicilan_berjalan, 2, ",", "."),
-            'piutang' => number_format($piutang, 2, ",", "."),
-            'total_asset' => number_format($total_asset, 2, ",", "."),
-            'total_infak' => number_format($total_infak, 2, ",", "."),
-            'total_cicilan' => number_format($total_cicilan, 2, ",", "."),
-            'total_pinjaman' => number_format($total_pinjaman, 2, ",", "."),
-            'saldo_awal' => number_format($saldo_awal, 2, ",", "."),
-            'saldo_akhir' => number_format($saldo_akhir, 2, ",", "."),
-        ];
-
-        $pdf = Pdf::setOption(['dpi' => 150, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'sans-serif'])->loadView('laporan.bulanan.cabang', $data);
-        return $pdf->stream('Laporan Bulanan - '. $bulan_laporan . '.pdf');
+        // Transitional fallback only: deploy the bwi:secure-reports command
+        // to eliminate public URL access to legacy reports.
+        abort_unless(
+            preg_match('/^[^\/\\\\]+\.pdf$/i', $path) && $path !== '.' && $path !== '..',
+            404
+        );
+        $legacy = public_path('storage'.DIRECTORY_SEPARATOR.$path);
+        abort_unless(is_file($legacy), 404);
+        return response()->file($legacy, [
+            'Content-Type' => 'application/pdf',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

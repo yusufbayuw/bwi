@@ -42,3 +42,5 @@ Route::get('/terms-and-conditions', function () {
     return view('tnc');
 });
 Route::get('bwi/pdf/{cabang_id}/{jenis}', [LaporanBulananCabangController::class, 'laporanBulananCabang'])->middleware('auth');
+
+Route::get('bwi/laporan/{laporan}/pdf', [LaporanBulananCabangController::class, 'download'])->middleware('auth')->name('bwi.laporan.download');
