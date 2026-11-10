@@ -76,7 +76,8 @@ class SecureLegacyReports extends Command
                     }
 
                     $fresh->berkas = $target;
-                    $fresh->save();
+                    // The migration is an explicit system operation, not a user edit.
+                    Laporan::withoutEvents(fn () => $fresh->save());
                 });
 
                 // Keep an old shared filename while another report still uses it.
@@ -88,7 +89,8 @@ class SecureLegacyReports extends Command
                             $fresh = Laporan::query()->lockForUpdate()->findOrFail($record->id);
                             if ($fresh->berkas === $target) {
                                 $fresh->berkas = $name;
-                                $fresh->save();
+                                // The migration is an explicit system operation, not a user edit.
+                    Laporan::withoutEvents(fn () => $fresh->save());
                             }
                         });
                         throw new RuntimeException('Penghapusan salinan publik gagal; referensi dikembalikan untuk percobaan ulang.');

@@ -190,7 +190,9 @@ class BwiMonthlyReport
             $record->jenis = 'Laporan Bulanan';
             $record->tanggal = $start->toDateString();
             $record->berkas = $path;
-            $record->save();
+            // Authorized system process: bypass the Eloquent archive immutability
+            // guard only for this single report record.
+            Laporan::withoutEvents(fn () => $record->save());
 
             return $record;
         });

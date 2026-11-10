@@ -41,12 +41,12 @@ class BwiReportAndTransactionTest extends TestCase
         $path = "bwi/reports/cabang-{$branch->id}/2026-10.pdf";
         Storage::disk('local')->put($path, '%PDF-demo');
 
-        $report = Laporan::create([
+        $report = Laporan::withoutEvents(fn () => Laporan::create([
             'cabang_id' => $branch->id,
             'jenis' => 'Laporan Bulanan',
             'tanggal' => '2026-10-01',
             'berkas' => $path,
-        ]);
+        ]));
 
         $this->get(route('bwi.laporan.download', ['laporan' => $report->id]))
             ->assertRedirect();
@@ -70,7 +70,10 @@ class BwiReportAndTransactionTest extends TestCase
         // Even an editable report row cannot reference another branch's file.
         $otherPath = "bwi/reports/cabang-{$otherBranch->id}/2026-10.pdf";
         Storage::disk('local')->put($otherPath, '%PDF-confidential');
-        $report->update(['berkas' => $otherPath]);
+        // Simulate corrupted legacy SQL rather than Eloquent: the model now
+        // protects report metadata from changes in the application.
+        \Illuminate\Support\Facades\DB::table('laporans')
+            ->where('id', $report->id)->update(['berkas' => $otherPath]);
         $this->actingAs($other)->get(route('bwi.laporan.download', ['laporan' => $report->id]))
             ->assertForbidden();
     }
@@ -163,12 +166,12 @@ class BwiReportAndTransactionTest extends TestCase
         Storage::fake('local');
         Storage::fake('public');
         $branch = $this->branch();
-        $record = Laporan::create([
+        $record = Laporan::withoutEvents(fn () => Laporan::create([
             'cabang_id' => $branch->id,
             'jenis' => 'Laporan Bulanan',
             'tanggal' => '2026-09-01',
             'berkas' => 'Laporan September.pdf',
-        ]);
+        ]));
         Storage::disk('public')->put('Laporan September.pdf', '%PDF-legacy');
 
         $this->artisan('bwi:secure-reports')->assertExitCode(0);

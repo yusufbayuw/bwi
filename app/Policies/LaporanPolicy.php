@@ -53,7 +53,7 @@ class LaporanPolicy
      */
     public function update(User $user, Laporan $laporan): bool
     {
-        return $user->can('update_laporan');
+        return ! $laporan->isSystemGenerated() && $user->can('update_laporan');
     }
 
     /**
@@ -65,7 +65,7 @@ class LaporanPolicy
      */
     public function delete(User $user, Laporan $laporan): bool
     {
-        return $user->can('delete_laporan');
+        return ! $laporan->isSystemGenerated() && $user->can('delete_laporan');
     }
 
     /**
@@ -76,7 +76,7 @@ class LaporanPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_laporan');
+        return false; // Report archives must be evaluated individually.
     }
 
     /**
@@ -88,7 +88,7 @@ class LaporanPolicy
      */
     public function forceDelete(User $user, Laporan $laporan): bool
     {
-        return $user->can('force_delete_laporan');
+        return ! $laporan->isSystemGenerated() && $user->can('force_delete_laporan');
     }
 
     /**
@@ -99,7 +99,7 @@ class LaporanPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_laporan');
+        return false;
     }
 
     /**
@@ -134,7 +134,7 @@ class LaporanPolicy
      */
     public function replicate(User $user, Laporan $laporan): bool
     {
-        return $user->can('replicate_laporan');
+        return ! $laporan->isSystemGenerated() && $user->can('replicate_laporan');
     }
 
     /**

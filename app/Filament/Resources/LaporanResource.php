@@ -81,12 +81,12 @@ class LaporanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Laporan $record): bool => ! $record->isSystemGenerated()),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Bulk removal of generated reports is forbidden.
+                // Non-generated records can still use the existing edit screen.
             ]);
     }
 
