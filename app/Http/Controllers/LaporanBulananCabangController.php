@@ -46,6 +46,10 @@ class LaporanBulananCabangController extends Controller
         $path = (string) $laporan->berkas;
 
         if (preg_match('#^bwi/reports/(?:cabang-[0-9]+|legacy)/[A-Za-z0-9_.-]+\.pdf$#i', $path)) {
+            // A report row must not be repointed to another branch's PDF.
+            $ownedByBranch = str_starts_with($path, 'bwi/reports/cabang-'.$laporan->cabang_id.'/');
+            $ownedLegacy = $path === 'bwi/reports/legacy/'.$laporan->id.'.pdf';
+            abort_unless($ownedByBranch || $ownedLegacy, 403);
             abort_unless(Storage::disk('local')->exists($path), 404);
             return Storage::disk('local')->response($path, basename($path), [
                 'Content-Type' => 'application/pdf',
