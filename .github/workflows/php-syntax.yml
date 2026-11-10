@@ -92,3 +92,7 @@ jobs:
           php artisan key:generate
       - name: Run MySQL integration tests
         run: php artisan test --testsuite=Feature --no-ansi
+      - name: Verify truly parallel approvals against disposable MySQL
+        run: |
+          php artisan migrate:fresh --force
+          php tests/Integration/mysql_parallel_approvals.php

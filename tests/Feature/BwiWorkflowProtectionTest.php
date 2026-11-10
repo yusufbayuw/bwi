@@ -108,6 +108,34 @@ class BwiWorkflowProtectionTest extends TestCase
         }
     }
 
+    public function test_branch_staff_can_download_own_report_but_not_another_branch_report(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $own = $this->makeBranch();
+        $other = Cabang::create(['nama_cabang' => 'Cabang Tetangga', 'saldo_awal' => 0]);
+
+        $report = Laporan::withoutEvents(fn () => Laporan::create([
+            'cabang_id' => $own->id,
+            'tanggal' => '2026-10-01',
+            'jenis' => 'Laporan Bulanan',
+            'berkas' => "bwi/reports/cabang-{$own->id}/2026-10.pdf",
+        ]));
+        \Illuminate\Support\Facades\Storage::disk('local')->put($report->berkas, '%PDF-archive');
+
+        \Spatie\Permission\Models\Role::findOrCreate('bendahara_cabang', 'web');
+        Permission::findOrCreate('view_laporan', 'web');
+        $staff = User::factory()->create();
+        $staff->forceFill(['cabang_id' => $own->id])->save();
+        $staff->assignRole('bendahara_cabang');
+        $staff->givePermissionTo('view_laporan');
+
+        $url = route('bwi.laporan.download', ['laporan' => $report->id]);
+        $this->actingAs($staff)->get($url)->assertOk();
+
+        $staff->forceFill(['cabang_id' => $other->id])->save();
+        $this->actingAs($staff)->get($url)->assertForbidden();
+    }
+
     public function test_existing_nonautomatic_report_remains_editable(): void
     {
         $branch = $this->makeBranch();
