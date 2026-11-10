@@ -82,7 +82,16 @@ class SecureLegacyReports extends Command
                 // Keep an old shared filename while another report still uses it.
                 if (!Laporan::where('berkas', $name)->exists() && is_file($source)) {
                     if (!@unlink($source)) {
-                        throw new RuntimeException('Referensi privat sudah aman, tetapi salinan publik belum terhapus.');
+                        // Keep the original reference for a repeatable retry
+                        // rather than silently leaving a public orphan.
+                        DB::transaction(function () use ($record, $name, $target) {
+                            $fresh = Laporan::query()->lockForUpdate()->findOrFail($record->id);
+                            if ($fresh->berkas === $target) {
+                                $fresh->berkas = $name;
+                                $fresh->save();
+                            }
+                        });
+                        throw new RuntimeException('Penghapusan salinan publik gagal; referensi dikembalikan untuk percobaan ulang.');
                     }
                 }
 

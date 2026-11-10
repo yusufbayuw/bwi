@@ -163,7 +163,13 @@ class BwiMonthlyReport
         $branch = Cabang::findOrFail($branchId);
         $start = $month->startOfMonth();
         $path = 'bwi/reports/cabang-'.$branch->id.'/'.$start->format('Y-m').'.pdf';
-        $content = Pdf::loadView('laporan.bulanan.cabang', $this->viewData($branch, $start))->output();
+        // Take one consistent month-end snapshot while branch financial
+        // writers are serialized, but release the lock before rendering PDF.
+        $data = DB::transaction(function () use ($branch, $start) {
+            Cabang::whereKey($branch->id)->lockForUpdate()->firstOrFail();
+            return $this->viewData($branch, $start);
+        });
+        $content = Pdf::loadView('laporan.bulanan.cabang', $data)->output();
 
         if (! Storage::disk('local')->put($path, $content)) {
             throw new RuntimeException('Gagal menyimpan PDF laporan pada storage privat.');
