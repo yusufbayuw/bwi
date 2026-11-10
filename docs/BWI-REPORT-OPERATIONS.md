@@ -39,3 +39,27 @@ buat dan migrasikan tabel jobs dahulu jika belum tersedia, dan periksa failed_jo
 - PDF pada periode lama tetap memperlihatkan piutang periode tersebut walaupun pinjaman sekarang berstatus Lunas.
 - Audit dan rekonsiliasi saldo historis wajib dilakukan sebelum GO-LIVE.
 - Tidak ada perubahan data historis otomatis pada deployment ini.
+
+
+## Audit integritas ledger (read only)
+
+    php artisan bwi:audit-ledger
+    php artisan bwi:audit-ledger --cabang=1 --as-of=2026-10-31
+    php artisan bwi:audit-ledger --json > audit-ledger.json
+
+Kode hasil 0 berarti tidak ada anomali yang tercakup pemeriksaan. Kode hasil 1 berarti perlu investigasi.
+Perintah ini mendeteksi ketidaksesuaian saldo vs debit/kredit, saldo negatif,
+duplikasi posting cicilan/pinjaman, dan baris mutasi dengan lebih dari satu
+referensi sumber. Ini bukan audit akuntansi menyeluruh; pemeriksaan tidak
+mengubah data transaksi maupun menyimpulkan bahwa semua histori sudah benar.
+
+## Proteksi transaksi bersamaan
+
+Lima model sumber keuangan menggunakan transaksi database otomatis dan
+mengunci baris Cabang dengan SELECT FOR UPDATE sebelum perubahan finansial
+di Eloquent. Perubahan pada record yang sudah diubah proses lain ditolak
+sebagai stale edit agar tidak terjadi koreksi saldo berulang.
+
+Operasi update/delete massal langsung melalui Query Builder, SQL manual,
+dan pemrosesan di luar Eloquent tidak mengeksekusi observer/trait. Jangan
+gunakan jalur tersebut untuk perubahan keuangan.
