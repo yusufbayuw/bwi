@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
             foreach ($cabangs as $key => $cabang_id) {
                 dispatch(new GenerateLaporanBulananPdfJob($cabang_id));
             }
-        })->monthlyOn(1, '02:00')->withoutOverlapping();
+        })->name('bwi-laporan-bulan-sebelumnya')->monthlyOn(1, '02:00')->timezone('Asia/Jakarta')->withoutOverlapping();
 
         $schedule->call(function () {
             $cabangs = Cabang::all()->pluck('id')->toArray();
@@ -38,7 +38,7 @@ class Kernel extends ConsoleKernel
             foreach ($cabangs as $key => $cabang_id) {
                 dispatch(new GenerateLaporanBulanan2MonthPdf($cabang_id));
             }
-        })->monthlyOn(1, '02:30')->withoutOverlapping();
+        })->name('bwi-laporan-dua-bulan-sebelumnya')->monthlyOn(1, '02:30')->timezone('Asia/Jakarta')->withoutOverlapping();
     }
 
     /**

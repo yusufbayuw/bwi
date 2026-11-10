@@ -43,6 +43,11 @@ jobs:
           cp .env.example .env
           composer install --no-interaction --prefer-dist --no-progress
           php artisan key:generate
+      - name: Check scheduler bootstrap and monthly report jobs
+        run: |
+          php artisan schedule:list | tee /tmp/bwi-schedule.txt
+          grep -q 'bwi-laporan-bulan-sebelumnya' /tmp/bwi-schedule.txt
+          grep -q 'bwi-laporan-dua-bulan-sebelumnya' /tmp/bwi-schedule.txt
       - name: Run regression tests
         run: php artisan test --no-ansi
   
