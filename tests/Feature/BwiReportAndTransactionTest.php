@@ -147,6 +147,17 @@ class BwiReportAndTransactionTest extends TestCase
         $this->assertEqualsWithDelta(0, $report->calculate($branch, CarbonImmutable::parse('2026-07-01'))['piutang'], 0.01);
     }
 
+
+    public function test_real_monthly_pdf_can_be_rendered_with_existing_template(): void
+    {
+        $branch = $this->branch();
+        $data = app(BwiMonthlyReport::class)
+            ->viewData($branch, CarbonImmutable::parse('2026-10-01'));
+
+        $bytes = Pdf::loadView('laporan.bulanan.cabang', $data)->output();
+        $this->assertStringStartsWith('%PDF-', $bytes);
+    }
+
     public function test_legacy_pdf_migration_is_dry_run_by_default(): void
     {
         Storage::fake('local');
