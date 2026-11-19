@@ -171,6 +171,12 @@ class CabangUserWorkbookService
                     $branch = $matches->first();
                 }
 
+                if ($branch && Cabang::query()
+                    ->whereRaw('LOWER(nama_cabang) = ?', [$nameKey])
+                    ->where('id', '!=', $branch->id)->exists()) {
+                    throw $this->rowError('Cabang', $row, 'Nama cabang sudah digunakan oleh cabang lain.');
+                }
+
                 if ($branch && isset($branchIdsInFile[$branch->id])) {
                     throw $this->rowError('Cabang', $row, 'Cabang yang sama muncul lebih dari sekali.');
                 }
@@ -277,10 +283,9 @@ class CabangUserWorkbookService
 
                 if ($row['role_tambahan'] !== '') {
                     $roles = array_unique(array_map('trim', explode(';', $row['role_tambahan'])));
-                    $allowed = array_unique(array_merge(['panel_user'], array_map(
-                        fn ($field) => (string) config('bwi.' . $field),
-                        self::ORGANIZATION_FIELDS,
-                    )));
+                    // Organizational roles must be assigned from the Pengurus
+                    // sheet, not independently from a user's free-form role list.
+                    $allowed = ['panel_user'];
                     foreach ($roles as $role) {
                         if (! in_array($role, $allowed, true) || ! Role::query()->where('name', $role)->where('guard_name', 'web')->exists()) {
                             throw $this->rowError('Pengguna', $row, "Role {$role} tidak dikenal atau tidak diizinkan untuk cabang.");
