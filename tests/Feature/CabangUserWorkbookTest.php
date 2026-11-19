@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use ZipArchive;
 
 class CabangUserWorkbookTest extends TestCase
 {
@@ -67,12 +68,20 @@ class CabangUserWorkbookTest extends TestCase
                     $book->getSheetNames()
                 );
 
-                foreach ($book->getAllSheets() as $sheet) {
-                    $this->assertFalse(
-                        $sheet->getShowGridlines(),
-                        "Gridlines must be hidden in sheet {$sheet->getTitle()}"
+                // PhpSpreadsheet 1.29 can re-enable gridlines while loading
+                // an XLSX with printOptions/gridLinesSet. Assert the XLSX XML
+                // actually delivered to Excel, rather than reader state.
+                $zip = new ZipArchive();
+                $this->assertTrue($zip->open($path) === true);
+                foreach (range(1, 4) as $sheetNumber) {
+                    $xml = $zip->getFromName("xl/worksheets/sheet{$sheetNumber}.xml");
+                    $this->assertIsString($xml);
+                    $this->assertMatchesRegularExpression(
+                        '/<sheetView\\b[^>]*\\bshowGridLines="false"/',
+                        $xml
                     );
                 }
+                $zip->close();
 
                 $book->disconnectWorksheets();
             } finally {
