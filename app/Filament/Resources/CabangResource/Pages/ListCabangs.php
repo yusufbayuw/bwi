@@ -4,7 +4,6 @@ namespace App\Filament\Resources\CabangResource\Pages;
 
 use App\Filament\Resources\CabangResource;
 use App\Services\CabangUserWorkbookService;
-use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -26,13 +25,19 @@ class ListCabangs extends ListRecords
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->visible($isSuperAdmin)
-                ->action(fn () => app(CabangUserWorkbookService::class)->downloadTemplate()),
+                ->action(function () {
+                    abort_unless(auth()->user()->hasRole('super_admin'), 403);
+                    return app(CabangUserWorkbookService::class)->downloadTemplate();
+                }),
 
             Actions\Action::make('exportCabangPengguna')
                 ->label('Export Cabang + Pengguna')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->visible($isSuperAdmin)
-                ->action(fn () => app(CabangUserWorkbookService::class)->downloadExport()),
+                ->action(function () {
+                    abort_unless(auth()->user()->hasRole('super_admin'), 403);
+                    return app(CabangUserWorkbookService::class)->downloadExport();
+                }),
 
             Actions\Action::make('importCabangPengguna')
                 ->label('Import / Update XLSX')
@@ -52,6 +57,7 @@ class ListCabangs extends ListRecords
                         ->required(),
                 ])
                 ->action(function (array $data): void {
+                    abort_unless(auth()->user()->hasRole('super_admin'), 403);
                     $relativePath = $data['file'];
                     $path = Storage::disk('local')->path($relativePath);
 
