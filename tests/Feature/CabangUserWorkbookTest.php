@@ -8,10 +8,12 @@ use App\Models\User;
 use App\Services\CabangUserWorkbookService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use ZipArchive;
 
 class CabangUserWorkbookTest extends TestCase
 {
@@ -49,6 +51,43 @@ class CabangUserWorkbookTest extends TestCase
         $book->disconnectWorksheets();
 
         return $path;
+    }
+
+    public function test_template_and_export_create_valid_xlsx_without_gridlines(): void
+    {
+        $service = app(CabangUserWorkbookService::class);
+
+        foreach (['downloadTemplate', 'downloadExport'] as $method) {
+            $response = $service->{$method}();
+            $path = $response->getFile()->getPathname();
+
+            try {
+                $book = IOFactory::load($path);
+                $this->assertSame(
+                    ['Cabang', 'Pengguna', 'Pengurus', 'Panduan'],
+                    $book->getSheetNames()
+                );
+
+                // PhpSpreadsheet 1.29 can re-enable gridlines while loading
+                // an XLSX with printOptions/gridLinesSet. Assert the XLSX XML
+                // actually delivered to Excel, rather than reader state.
+                $zip = new ZipArchive();
+                $this->assertTrue($zip->open($path) === true);
+                foreach (range(1, 4) as $sheetNumber) {
+                    $xml = $zip->getFromName("xl/worksheets/sheet{$sheetNumber}.xml");
+                    $this->assertIsString($xml);
+                    $this->assertMatchesRegularExpression(
+                        '/<sheetView\\b[^>]*\\bshowGridLines="false"/',
+                        $xml
+                    );
+                }
+                $zip->close();
+
+                $book->disconnectWorksheets();
+            } finally {
+                @unlink($path);
+            }
+        }
     }
 
     public function test_single_upload_creates_branch_users_officers_and_opening_mutation_once(): void
