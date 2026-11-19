@@ -568,7 +568,7 @@ class CabangUserWorkbookService
             $sheet->setTitle($name);
             $this->writeRow($sheet, 1, $headers);
             $sheet->freezePane('A2');
-            $sheet->getSheetView()->setShowGridLines(false);
+            $sheet->setShowGridlines(false);
             $last = Coordinate::stringFromColumnIndex(count($headers));
             $sheet->getStyle("A1:{$last}1")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
             $sheet->getStyle("A1:{$last}1")->getFill()->setFillType(Fill::FILL_SOLID)
@@ -615,7 +615,7 @@ class CabangUserWorkbookService
         $notes->getColumnDimension('B')->setWidth(110);
         $notes->getStyle('A1:B1')->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
         $notes->getStyle('A1:B1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('193D69');
-        $notes->getSheetView()->setShowGridLines(false);
+        $notes->setShowGridlines(false);
         $book->setActiveSheetIndex(0);
 
         return $book;
