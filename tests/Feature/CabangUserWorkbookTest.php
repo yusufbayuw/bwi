@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\CabangUserWorkbookService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Spatie\Permission\Models\Role;
@@ -49,6 +50,35 @@ class CabangUserWorkbookTest extends TestCase
         $book->disconnectWorksheets();
 
         return $path;
+    }
+
+    public function test_template_and_export_create_valid_xlsx_without_gridlines(): void
+    {
+        $service = app(CabangUserWorkbookService::class);
+
+        foreach (['downloadTemplate', 'downloadExport'] as $method) {
+            $response = $service->{$method}();
+            $path = $response->getFile()->getPathname();
+
+            try {
+                $book = IOFactory::load($path);
+                $this->assertSame(
+                    ['Cabang', 'Pengguna', 'Pengurus', 'Panduan'],
+                    $book->getSheetNames()
+                );
+
+                foreach ($book->getAllSheets() as $sheet) {
+                    $this->assertFalse(
+                        $sheet->getShowGridlines(),
+                        "Gridlines must be hidden in sheet {$sheet->getTitle()}"
+                    );
+                }
+
+                $book->disconnectWorksheets();
+            } finally {
+                @unlink($path);
+            }
+        }
     }
 
     public function test_single_upload_creates_branch_users_officers_and_opening_mutation_once(): void
