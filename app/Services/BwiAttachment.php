@@ -143,6 +143,8 @@ final class BwiAttachment
             $file['mime'] === 'application/pdf' ? 'attachment' : 'inline',
             $name
         );
+        // BinaryFileResponse defaults to public caching; override it explicitly.
+        $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
         return $response;
     }
 }

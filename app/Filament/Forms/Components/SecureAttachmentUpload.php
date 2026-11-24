@@ -5,6 +5,8 @@ namespace App\Filament\Forms\Components;
 use App\Services\BwiAttachment;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class SecureAttachmentUpload extends FileUpload
@@ -21,7 +23,13 @@ final class SecureAttachmentUpload extends FileUpload
             ->openable()
             ->downloadable()
             // Missing legacy files must not silently turn into null during edit.
-            ->fetchFileInformation(false)
+            ->afterStateHydrated(static function (self $component, $state): void {
+                $files = collect(Arr::wrap($state))
+                    ->filter(fn ($file) => is_string($file) && $file !== '')
+                    ->mapWithKeys(fn ($file) => [(string) Str::uuid() => $file])
+                    ->all();
+                $component->state($files);
+            })
             ->getUploadedFileUsing(function (string $file): ?array {
                 if (!$this->mayRetain($file) ||
                     !BwiAttachment::readableBy(auth()->user(), $file)) {
