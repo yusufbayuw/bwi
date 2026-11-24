@@ -15,7 +15,7 @@ jobs:
       - name: Configure PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           coverage: none
       - name: Check PHP syntax
         run: |
@@ -35,9 +35,11 @@ jobs:
       - name: Configure PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           coverage: none
           extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip
+      - name: Verify committed dependency manifest
+        run: composer validate --strict --no-check-publish
       - name: Prepare application
         run: |
           cp .env.example .env
@@ -82,7 +84,7 @@ jobs:
       - name: Configure PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           coverage: none
           extensions: mbstring,dom,xml,pdo_mysql,bcmath,gd,zip
       - name: Prepare application
