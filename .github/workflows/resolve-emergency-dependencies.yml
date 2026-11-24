@@ -17,14 +17,19 @@ jobs:
           persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           coverage: none
           extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip,intl
           tools: composer:v2
-      - name: Resolve patched Livewire without executing application code
+      - name: Prepare compatible supported-framework constraints
         run: |
-          composer require 'livewire/livewire:^3.8.12' --no-update --no-interaction --no-plugins --no-scripts
-          composer update livewire/livewire --with-all-dependencies --no-install --no-interaction --no-plugins --no-scripts
+          # No application code references the old Stepper package.
+          composer remove icetalker/filament-stepper --no-update --no-plugins --no-scripts --no-interaction
+          composer require 'php:^8.4' 'laravel/framework:^12.0' 'filament/filament:^3.3.57' 'livewire/livewire:^3.8.12' 'barryvdh/laravel-dompdf:^3.1' 'laravel/sanctum:^4.0' 'laravel/tinker:^2.10' 'flowframe/laravel-trend:^0.5' 'eightynine/filament-excel-import:^3.1.11' 'jeffgreco13/filament-breezy:^2.6' 'joshembling/image-optimizer:^1.6' 'pxlrbt/filament-excel:^2.5' 'solution-forest/filament-simplelightbox:0.0.11' 'swisnl/filament-backgrounds:^1.1.5' --no-update --no-interaction --no-plugins --no-scripts
+          composer require --dev 'barryvdh/laravel-ide-helper:^3.8' 'nunomaduro/collision:^8.6' 'phpunit/phpunit:^11.5.3' 'spatie/laravel-ignition:^2.9' --no-update --no-interaction --no-plugins --no-scripts
+      - name: Resolve all dependencies without executing application code
+        run: |
+          composer update --no-install --no-interaction --no-plugins --no-scripts
           composer validate --strict --no-check-publish
       - name: Preserve Composer-generated manifests for review
         uses: actions/upload-artifact@v4
@@ -35,5 +40,17 @@ jobs:
             composer.lock
           if-no-files-found: error
           retention-days: 3
-      - name: Audit resolved production dependencies
-        run: composer audit --locked --no-dev --no-interaction --no-plugins --no-scripts
+      - name: Audit resolved dependencies
+        run: composer audit --locked --no-interaction --no-plugins --no-scripts
+      - name: Check candidate application and financial regression
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_DRIVER: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          cp .env.example .env
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan key:generate
+          php artisan test --no-ansi
