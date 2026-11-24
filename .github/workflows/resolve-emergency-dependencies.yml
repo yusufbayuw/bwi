@@ -1,0 +1,41 @@
+name: Dependency security gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
+        with:
+          php-version: '8.4'
+          coverage: none
+          extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip,intl
+          tools: composer:v2
+      - name: Validate committed manifests
+        run: composer validate --strict --no-check-publish --no-plugins --no-scripts
+      - name: Audit all locked dependencies
+        run: composer audit --locked --no-interaction --no-plugins --no-scripts
+      - name: Enforce emergency minimum versions
+        run: |
+          php -r '
+            $lock = json_decode(file_get_contents("composer.lock"), true, 512, JSON_THROW_ON_ERROR);
+            $versions = array_column($lock["packages"], "version", "name");
+            $minimums = ["livewire/livewire" => "3.8.12", "laravel/framework" => "12.0.0", "filament/filament" => "3.3.57", "pxlrbt/filament-excel" => "2.3.3"];
+            foreach ($minimums as $name => $minimum) {
+                if (!isset($versions[$name]) || version_compare(ltrim($versions[$name], "v"), $minimum, "<")) {
+                    fwrite(STDERR, "Missing or below security floor: $name\n");
+                    exit(1);
+                }
+            }
+          '
