@@ -21,7 +21,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\CheckboxList;
 use App\Filament\Resources\UserResource\Pages;
@@ -122,7 +121,7 @@ class UserResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->label('Nomor KTP')
                             ->mask('9999 9999 9999 9999'),
-                        FileUpload::make('file_ktp')
+                        \App\Filament\Forms\Components\SecureAttachmentUpload::make('file_ktp')
                             ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->label('Berkas KTP'),
                         TextInput::make('nomor_kk')
@@ -130,7 +129,7 @@ class UserResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->label('Nomor KK')
                             ->mask('9999 9999 9999 9999'),
-                        FileUpload::make('file_kk')
+                        \App\Filament\Forms\Components\SecureAttachmentUpload::make('file_kk')
                             ->required(fn (Get $get) => $get('jenis_anggota') === 'Anggota' && !$userAuthAdminAccess)
                             ->label('Berkas KK'),
                         Textarea::make('alamat')
@@ -254,7 +253,7 @@ class UserResource extends Resource
                     //->formatStateUsing(fn ($state) => 'NIK: ' . $state)
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                ImageColumn::make('file_ktp')
+                ImageColumn::make('file_ktp')->disk('public')->visibility('private')
                     ->label('Berkas KTP')
                     ->simpleLightbox()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -262,7 +261,7 @@ class UserResource extends Resource
                     ->label('Nomor KK')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                ImageColumn::make('file_kk')
+                ImageColumn::make('file_kk')->disk('public')->visibility('private')
                     ->label('Berkas KK')
                     ->simpleLightbox()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -384,12 +383,12 @@ class UserResource extends Resource
                                 TextEntry::make('nomor_ktp')
                                     ->label('Nomor KTP')
                                     ->icon('heroicon-m-identification'),
-                                ImageEntry::make('file_ktp')
+                                ImageEntry::make('file_ktp')->disk('public')->visibility('private')
                                     ->label('Berkas KTP')
                                     ->simpleLightbox(),
                                 TextEntry::make('nomor_kk')
                                     ->label('Nomor KK'),
-                                ImageEntry::make('file_kk')
+                                ImageEntry::make('file_kk')->disk('public')->visibility('private')
                                     ->label('Berkas KK')
                                     ->simpleLightbox(),
                             ]),

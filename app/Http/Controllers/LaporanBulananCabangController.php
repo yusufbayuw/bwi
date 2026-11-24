@@ -57,17 +57,9 @@ class LaporanBulananCabangController extends Controller
             ]);
         }
 
-        // Transitional fallback only: deploy the bwi:secure-reports command
-        // to eliminate public URL access to legacy reports.
-        abort_unless(
-            preg_match('/^[^\/\\\\]+\.pdf$/i', $path) && $path !== '.' && $path !== '..',
-            404
-        );
-        $legacy = public_path('storage'.DIRECTORY_SEPARATOR.$path);
-        abort_unless(is_file($legacy), 404);
-        return response()->file($legacy, [
-            'Content-Type' => 'application/pdf',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        // Old filenames remain on the compatibility disk, not in the webroot.
+        // Check all references, including identity/transaction attachments.
+        abort_unless(\App\Services\BwiAttachment::readableBy($request->user(), $path), 403);
+        return \App\Services\BwiAttachment::response($path);
     }
 }

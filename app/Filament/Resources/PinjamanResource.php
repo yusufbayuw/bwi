@@ -25,7 +25,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Forms\Components\ToggleButtons;
@@ -281,7 +280,7 @@ class PinjamanResource extends Resource
                             ->native(false)
                             ->hidden((fn (Get $get) => (!($userAuth->hasRole($adminAccessApprove))) || ($get('acc_pinjaman') != 1)))
                             ->required($userAuth->hasRole($adminAccessApprove)),
-                        FileUpload::make('berkas'),
+                        \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas'),
                     ])
 
                     ->columnSpanFull(),
@@ -312,7 +311,7 @@ class PinjamanResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     ),
-                ImageColumn::make('berkas')->simpleLightbox(),
+                ImageColumn::make('berkas')->disk('public')->visibility('private')->simpleLightbox(),
                 TextColumn::make('total_pinjaman')
                     ->sortable()
                     ->alignRight()
@@ -350,7 +349,7 @@ class PinjamanResource extends Resource
                     ->date()
                     ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),
-                ImageColumn::make('berkas')->simpleLightbox(),
+                ImageColumn::make('berkas')->disk('public')->visibility('private')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

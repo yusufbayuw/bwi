@@ -39,8 +39,10 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
-            'visibility' => 'public',
+            // Compatibility disk name only. Never expose this directory as static files.
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/bwi/attachments',
+            'visibility' => 'private',
+            'serve' => false,
             'throw' => false,
         ],
 
@@ -70,7 +72,7 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        // Intentionally empty: attachments must pass the authenticated controller.
     ],
 
 ];

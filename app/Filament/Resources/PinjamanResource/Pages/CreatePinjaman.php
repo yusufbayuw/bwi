@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Validation\Rules\Unique;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\PinjamanResource;
 use Filament\Forms\Components\ToggleButtons;
@@ -491,7 +490,7 @@ class CreatePinjaman extends CreateRecord
                             Hidden::make('status'),
                             Hidden::make('acc_pinjaman')->default(0),
                             Hidden::make('tanggal_cicilan_pertama'),
-                            FileUpload::make('berkas'),
+                            \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas'),
                         ])
                 ])->submitAction(new HtmlString(Blade::render(<<<BLADE
                 <x-filament::button

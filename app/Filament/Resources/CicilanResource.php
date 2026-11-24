@@ -18,7 +18,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CicilanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -139,7 +138,7 @@ class CicilanResource extends Resource
                 Textarea::make('catatan')
                     ->maxLength(255)
                     ->hidden(fn (Get $get) => !$get('status_cicilan')),
-                FileUpload::make('berkas')
+                \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas')
                 ->hidden(fn (Get $get) => !$get('status_cicilan')),
             ]);
     }
@@ -182,7 +181,7 @@ class CicilanResource extends Resource
                     ->date()
                     ->formatStateUsing(fn ($state) => Carbon::parse($state)->translatedFormat('l, d M Y'))
                     ->sortable(),
-                ImageColumn::make('berkas')->simpleLightbox(),
+                ImageColumn::make('berkas')->disk('public')->visibility('private')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -45,9 +45,7 @@ class LaporanResource extends Resource
                 Forms\Components\TextInput::make('jenis')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('berkas')
-                    ->required()
-                    ->maxLength(255),
+                \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas')->required(),
             ]);
     }
 

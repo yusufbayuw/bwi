@@ -43,4 +43,8 @@ Route::get('/terms-and-conditions', function () {
 });
 Route::get('bwi/pdf/{cabang_id}/{jenis}', [LaporanBulananCabangController::class, 'laporanBulananCabang'])->middleware('auth');
 
+Route::get('bwi/attachments/{filename}', \App\Http\Controllers\BwiAttachmentController::class)
+    ->where('filename', '[A-Za-z0-9][A-Za-z0-9_. -]{0,250}')
+    ->middleware('auth')->name('bwi.attachments.show');
+
 Route::get('bwi/laporan/{laporan}/pdf', [LaporanBulananCabangController::class, 'download'])->middleware('auth')->name('bwi.laporan.download');

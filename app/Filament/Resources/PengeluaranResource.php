@@ -19,7 +19,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PengeluaranResource\Pages;
@@ -133,7 +132,7 @@ class PengeluaranResource extends Resource
                     ->live(onBlur:true),
                 TextInput::make('keterangan')
                     ->required(),
-                FileUpload::make('berkas'),
+                \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas'),
             ]);
     }
 
@@ -160,7 +159,7 @@ class PengeluaranResource extends Resource
                     )
                     ->sortable()
                     ->alignRight(),
-                ImageColumn::make('berkas')->simpleLightbox(),
+                ImageColumn::make('berkas')->disk('public')->visibility('private')->simpleLightbox(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CabangResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\CabangResource\RelationManagers;
-use Filament\Forms\Components\FileUpload;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -84,7 +83,7 @@ class CabangResource extends Resource
                             ->required()
                             ->dehydrateStateUsing(fn ($state) => str_replace(",", ".", preg_replace('/[^0-9,]/', '', $state)))
                             ->formatStateUsing(fn ($state) => str_replace(".", ",", $state)),
-                        FileUpload::make('berkas'),
+                        \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas'),
                     ]),
                 Section::make('KEAMILAN')
                     ->schema([
@@ -149,7 +148,7 @@ class CabangResource extends Resource
                         decimalSeparator: ',',
                         thousandsSeparator: '.',
                     )->alignRight(),
-                Tables\Columns\ImageColumn::make('berkas')->simpleLightbox(),
+                Tables\Columns\ImageColumn::make('berkas')->disk('public')->visibility('private')->simpleLightbox(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -194,7 +193,7 @@ class CabangResource extends Resource
                         TextEntry::make('lokasi')
                             ->label('Alamat/Lokasi')
                             ->columnSpanFull(),
-                        ImageEntry::make('berkas')
+                        ImageEntry::make('berkas')->disk('public')->visibility('private')
                             ->simpleLightbox(),
                     ]),
                 ComponentsSection::make('KEPENGURUSAN')
