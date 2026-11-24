@@ -1,0 +1,39 @@
+name: Resolve emergency dependency patch
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    if: github.head_ref == 'security/emergency-hardening' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip,intl
+          tools: composer:v2
+      - name: Resolve patched Livewire without executing application code
+        run: |
+          composer require 'livewire/livewire:^3.8.12' --no-update --no-interaction --no-plugins --no-scripts
+          composer update livewire/livewire --with-all-dependencies --no-install --no-interaction --no-plugins --no-scripts
+          composer validate --strict --no-check-publish
+      - name: Preserve Composer-generated manifests for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: bwi-emergency-composer-manifests
+          path: |
+            composer.json
+            composer.lock
+          if-no-files-found: error
+          retention-days: 3
+      - name: Audit resolved production dependencies
+        run: composer audit --locked --no-dev --no-interaction --no-plugins --no-scripts
