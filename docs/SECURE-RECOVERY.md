@@ -1,7 +1,7 @@
 # BWI secure recovery and deployment
 
 ## Release gate
-Do not deploy this branch or the existing main to production until the Composer-generated lockfile is committed, composer validate and composer audit pass, PHP lint and both finance regression suites pass, and the restored database is reconciled. A patched Livewire alone does not establish that a previously compromised host is clean. Laravel 10 and PHP 8.1 are legacy; migration to supported releases is a separate required production-readiness task.
+Do not deploy this branch or the existing main to production until the Composer-generated lockfile is committed, composer validate and composer audit pass, PHP lint and both finance regression suites pass, and the restored database is reconciled. A patched Livewire alone does not establish that a previously compromised host is clean. The emergency modernization targets PHP 8.4, Laravel 12 and Filament 3 with patched Livewire 3.8.12 or newer. Laravel 12 receives security fixes until 2027-02-24; plan the next framework upgrade before that date.
 
 ## Recovery
 Keep the old VPS isolated. Retain incident logs and samples separately from business backup. Verify backup checksums off-host and test restore to an isolated, disposable database. Review SQL routines, events, triggers, users and grants before restore. Scan documents for malicious content and never restore old executable source, vendor, cache, service files, or cron blindly. Reconcile transaction totals, ledger balances, loans, installments, infak, expenses, roles and users against independent records. Rotate DB, Redis, SMTP, SSH and other credentials from a clean device; invalidate sessions and review application-key rotation against encrypted data before changing it.
