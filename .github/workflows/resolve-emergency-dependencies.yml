@@ -1,56 +1,41 @@
-name: Resolve emergency dependency patch
+name: Dependency security gate
 
 on:
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  resolve:
-    if: github.head_ref == 'security/emergency-hardening' && github.event.pull_request.head.repo.full_name == github.repository
+  dependency-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962
         with:
           php-version: '8.4'
           coverage: none
           extensions: mbstring,dom,xml,pdo_sqlite,sqlite3,bcmath,gd,zip,intl
           tools: composer:v2
-      - name: Prepare compatible supported-framework constraints
-        run: |
-          # No application code references the old Stepper package.
-          composer remove icetalker/filament-stepper --no-update --no-plugins --no-scripts --no-interaction
-          composer require 'php:^8.4' 'laravel/framework:^12.0' 'filament/filament:^3.3.57' 'livewire/livewire:^3.8.12' 'barryvdh/laravel-dompdf:^3.1' 'laravel/sanctum:^4.0' 'laravel/tinker:^2.10' 'flowframe/laravel-trend:^0.5' 'eightynine/filament-excel-import:^3.1.11' 'jeffgreco13/filament-breezy:^2.6' 'joshembling/image-optimizer:^1.6' 'pxlrbt/filament-excel:^2.5' 'solution-forest/filament-simplelightbox:0.0.11' 'swisnl/filament-backgrounds:^1.1.5' --no-update --no-interaction --no-plugins --no-scripts
-          composer require --dev 'barryvdh/laravel-ide-helper:^3.8' 'nunomaduro/collision:^8.6' 'phpunit/phpunit:^11.5.3' 'spatie/laravel-ignition:^2.9' --no-update --no-interaction --no-plugins --no-scripts
-      - name: Resolve all dependencies without executing application code
-        run: |
-          composer update --no-install --no-interaction --no-plugins --no-scripts
-          composer validate --strict --no-check-publish
-      - name: Preserve Composer-generated manifests for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: bwi-emergency-composer-manifests
-          path: |
-            composer.json
-            composer.lock
-          if-no-files-found: error
-          retention-days: 3
-      - name: Audit resolved dependencies
+      - name: Validate committed manifests
+        run: composer validate --strict --no-check-publish --no-plugins --no-scripts
+      - name: Audit all locked dependencies
         run: composer audit --locked --no-interaction --no-plugins --no-scripts
-      - name: Check candidate application and financial regression
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
-          CACHE_DRIVER: array
-          SESSION_DRIVER: array
-          QUEUE_CONNECTION: sync
+      - name: Enforce emergency minimum versions
         run: |
-          cp .env.example .env
-          composer install --no-interaction --prefer-dist --no-progress
-          php artisan key:generate
-          php artisan test --no-ansi
+          php -r '
+            $lock = json_decode(file_get_contents("composer.lock"), true, 512, JSON_THROW_ON_ERROR);
+            $versions = array_column($lock["packages"], "version", "name");
+            $minimums = ["livewire/livewire" => "3.8.12", "laravel/framework" => "12.0.0", "filament/filament" => "3.3.57", "pxlrbt/filament-excel" => "2.3.3"];
+            foreach ($minimums as $name => $minimum) {
+                if (!isset($versions[$name]) || version_compare(ltrim($versions[$name], "v"), $minimum, "<")) {
+                    fwrite(STDERR, "Missing or below security floor: $name\n");
+                    exit(1);
+                }
+            }
+          '
