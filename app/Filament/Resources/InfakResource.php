@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\InfakResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InfakResource\RelationManagers;
-use Filament\Forms\Components\FileUpload;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -87,7 +86,7 @@ class InfakResource extends Resource
                         "Transfer Bank" => "Transfer Bank",
                     ])->default("Cash Tunai"),
                 DatePicker::make('tanggal')->default(now())->maxDate(now())->hint('Maksimal hari ini')->native(false),
-                FileUpload::make('berkas'),
+                \App\Filament\Forms\Components\SecureAttachmentUpload::make('berkas'),
             ]);
     }
 
@@ -175,7 +174,7 @@ class InfakResource extends Resource
                         TextEntry::make('tanggal')
                             ->label('Tanggal Pembayaran:')
                             ->date(),
-                        ImageEntry::make('berkas'),
+                        ImageEntry::make('berkas')->disk('public')->visibility('private'),
                     ]),
             ]);
     }

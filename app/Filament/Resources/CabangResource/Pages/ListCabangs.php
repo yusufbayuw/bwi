@@ -8,7 +8,7 @@ use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Validation\ValidationException;
 
 class ListCabangs extends ListRecords
@@ -49,8 +49,7 @@ class ListCabangs extends ListRecords
                 ->form([
                     FileUpload::make('file')
                         ->label('File XLSX')
-                        ->disk('local')
-                        ->directory('bwi/imports')
+                        ->storeFiles(false)
                         ->visibility('private')
                         ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
                         ->maxSize(10240)
@@ -58,8 +57,14 @@ class ListCabangs extends ListRecords
                 ])
                 ->action(function (array $data): void {
                     abort_unless(auth()->user()->hasRole('super_admin'), 403);
-                    $relativePath = $data['file'];
-                    $path = Storage::disk('local')->path($relativePath);
+                    $file = $data['file'] ?? null;
+                    if (!$file instanceof TemporaryUploadedFile ||
+                        strtolower($file->getClientOriginalExtension()) !== 'xlsx' ||
+                        $file->getSize() > 10240 * 1024 ||
+                        $file->getMimeType() !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                        throw ValidationException::withMessages(['file' => 'Unggah file XLSX yang valid.']);
+                    }
+                    $path = $file->getRealPath();
 
                     try {
                         $result = app(CabangUserWorkbookService::class)->import($path);
@@ -80,7 +85,7 @@ class ListCabangs extends ListRecords
                             ->persistent()
                             ->send();
                     } finally {
-                        Storage::disk('local')->delete($relativePath);
+                        $file->delete();
                     }
                 }),
 

@@ -81,7 +81,7 @@ class SecureLegacyReports extends Command
                 });
 
                 // Keep an old shared filename while another report still uses it.
-                if (!Laporan::where('berkas', $name)->exists() && is_file($source)) {
+                if (\App\Services\BwiAttachment::references($name)->isEmpty() && is_file($source)) {
                     if (!@unlink($source)) {
                         // Keep the original reference for a repeatable retry
                         // rather than silently leaving a public orphan.

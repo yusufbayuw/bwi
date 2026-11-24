@@ -32,7 +32,7 @@ class BerkasResource extends Resource
                 Forms\Components\TextInput::make('keterangan')
                     ->maxLength(255)
                     ->label('Keterangan Berkas'),
-                Forms\Components\FileUpload::make('file')
+                \App\Filament\Forms\Components\SecureAttachmentUpload::make('file')
                     ->label('Unggah Berkas')
                     ->required(),
             ]);
@@ -49,7 +49,7 @@ class BerkasResource extends Resource
                 Tables\Columns\TextColumn::make('file')
                     ->label('Berkas')
                     ->formatStateUsing(fn ($state) => (explode('.', $state)[1] ?? 'file'))
-                    ->url(fn ($state) => env('APP_URL') . "/storage/" . $state, true),
+                    ->url(fn ($state) => \App\Services\BwiAttachment::url($state), true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

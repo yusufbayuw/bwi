@@ -37,7 +37,9 @@ class LaporanBulananCabangController extends Controller
 
         $month = CarbonImmutable::now('Asia/Jakarta')->startOfMonth();
         return Pdf::loadView('laporan.bulanan.cabang', $reports->viewData($branch, $month))
-            ->stream('Laporan-'.$month->format('Y-m').'.pdf');
+            ->stream('Laporan-'.$month->format('Y-m').'.pdf')
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('X-Content-Type-Options', 'nosniff');
     }
 
     public function download(Request $request, Laporan $laporan)
@@ -53,21 +55,14 @@ class LaporanBulananCabangController extends Controller
             abort_unless(Storage::disk('local')->exists($path), 404);
             return Storage::disk('local')->response($path, basename($path), [
                 'Content-Type' => 'application/pdf',
+                'Cache-Control' => 'private, no-store, max-age=0',
                 'X-Content-Type-Options' => 'nosniff',
             ]);
         }
 
-        // Transitional fallback only: deploy the bwi:secure-reports command
-        // to eliminate public URL access to legacy reports.
-        abort_unless(
-            preg_match('/^[^\/\\\\]+\.pdf$/i', $path) && $path !== '.' && $path !== '..',
-            404
-        );
-        $legacy = public_path('storage'.DIRECTORY_SEPARATOR.$path);
-        abort_unless(is_file($legacy), 404);
-        return response()->file($legacy, [
-            'Content-Type' => 'application/pdf',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        // Old filenames remain on the compatibility disk, not in the webroot.
+        // Check all references, including identity/transaction attachments.
+        abort_unless(\App\Services\BwiAttachment::readableBy($request->user(), $path), 403);
+        return \App\Services\BwiAttachment::response($path);
     }
 }
